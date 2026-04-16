@@ -291,6 +291,8 @@ export default function App() {
 
   const login = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
   const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
+
+  const isManager    = currentUser?.role === "Manager";
   const canSeePrizes = currentUser && !PRIZE_RESTRICTED_IDS.includes(currentUser.id);
   const T            = theme==="dark" ? DARK : LIGHT;
 
