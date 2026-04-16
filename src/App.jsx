@@ -45,12 +45,55 @@ const TROPHY_COLORS = {
 };
 
 const TV_THEMES = {
-  dark:   { bg:"#0a0f1e", card:"#0f172a", border:"#1e3a5f", text:"#f1f5f9", muted:"#64748b", accent:"#60a5fa", label:"🌙 Dark" },
-  fire:   { bg:"#1a0500", card:"#2d0a00", border:"#7c2d12", text:"#fef3c7", muted:"#fb923c", accent:"#f97316", label:"🔥 Fire" },
-  neon:   { bg:"#000d00", card:"#001a00", border:"#16a34a", text:"#dcfce7", muted:"#4ade80", accent:"#22c55e", label:"💚 Neon" },
-  galaxy: { bg:"#05001a", card:"#0d0030", border:"#7c3aed", text:"#ede9fe", muted:"#a78bfa", accent:"#8b5cf6", label:"🌌 Galaxy" },
-  gold:   { bg:"#1a1000", card:"#2a1a00", border:"#b45309", text:"#fef9c3", muted:"#fbbf24", accent:"#f59e0b", label:"🏆 Gold" },
-  ice:    { bg:"#001a2e", card:"#002440", border:"#0ea5e9", text:"#e0f2fe", muted:"#7dd3fc", accent:"#38bdf8", label:"❄️ Ice" },
+  midnight: {
+    label:"🌙 Midnight", animated:false,
+    bg:"#0a0f1e", card:"#0f172a", border:"#1e3a5f", text:"#f1f5f9", muted:"#64748b", accent:"#60a5fa",
+    top3:[
+      { cup:"#f59e0b", shine:"#fde68a", shadow:"#b45309", glow:"#f59e0b55", label:"GOLD",   border:"#f59e0b66", bg:"linear-gradient(135deg,#1c1500,#0f172a)" },
+      { cup:"#cbd5e1", shine:"#f1f5f9", shadow:"#64748b", glow:"#94a3b855", label:"SILVER", border:"#94a3b855", bg:"linear-gradient(135deg,#0f1520,#0f172a)" },
+      { cup:"#c2773a", shine:"#f0a968", shadow:"#7c4a1e", glow:"#c2773a55", label:"BRONZE", border:"#c2773a55", bg:"linear-gradient(135deg,#180e05,#0f172a)" },
+    ],
+  },
+  inferno: {
+    label:"🔥 Inferno", animated:true,
+    animBg:"linear-gradient(270deg,#0d0000,#450a00,#7c1d00,#b45309,#7c1d00,#450a00,#0d0000)",
+    animStyle:"@keyframes tvAnim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}",
+    bg:"#0d0000", card:"#1a0500", border:"#7c2d12", text:"#fef3c7", muted:"#fb923c", accent:"#f97316",
+    top3:[
+      { cup:"#ef4444", shine:"#fca5a5", shadow:"#991b1b", glow:"#ef444455", label:"CRIMSON", border:"#ef444466", bg:"linear-gradient(135deg,#1c0000,#0d0000)" },
+      { cup:"#fb923c", shine:"#fed7aa", shadow:"#c2410c", glow:"#fb923c55", label:"EMBER",   border:"#fb923c66", bg:"linear-gradient(135deg,#1a0800,#0d0000)" },
+      { cup:"#78716c", shine:"#d6d3d1", shadow:"#44403c", glow:"#78716c55", label:"ASH",     border:"#78716c66", bg:"linear-gradient(135deg,#1c1917,#0d0000)" },
+    ],
+  },
+  galaxy: {
+    label:"🌌 Galaxy", animated:true,
+    animBg:"linear-gradient(270deg,#030010,#0d0040,#1e0060,#4c1d95,#1e0060,#0d0040,#030010)",
+    animStyle:"@keyframes tvAnim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}",
+    bg:"#030010", card:"#0a0020", border:"#6d28d9", text:"#ede9fe", muted:"#a78bfa", accent:"#8b5cf6",
+    top3:[
+      { cup:"#a855f7", shine:"#e9d5ff", shadow:"#6b21a8", glow:"#a855f755", label:"COSMIC",   border:"#a855f766", bg:"linear-gradient(135deg,#1a0040,#030010)" },
+      { cup:"#818cf8", shine:"#c7d2fe", shadow:"#4338ca", glow:"#818cf855", label:"NEBULA",   border:"#818cf866", bg:"linear-gradient(135deg,#0f1060,#030010)" },
+      { cup:"#6ee7b7", shine:"#d1fae5", shadow:"#047857", glow:"#6ee7b755", label:"STARDUST", border:"#6ee7b766", bg:"linear-gradient(135deg,#001a10,#030010)" },
+    ],
+  },
+  gameday: {
+    label:"🏈 Game Day", animated:false,
+    bg:"#0a0e1a", card:"#0f1729", border:"#1e3a6e", text:"#f1f5f9", muted:"#94a3b8", accent:"#3b82f6",
+    top3:[
+      { cup:"#1d4ed8", shine:"#93c5fd", shadow:"#1e3a8a", glow:"#1d4ed855", label:"NAVY",  border:"#1d4ed866", bg:"linear-gradient(135deg,#0a0e1a,#1e3a8a33)" },
+      { cup:"#dc2626", shine:"#fca5a5", shadow:"#991b1b", glow:"#dc262655", label:"RED",   border:"#dc262666", bg:"linear-gradient(135deg,#0a0e1a,#7f1d1d33)" },
+      { cup:"#e2e8f0", shine:"#ffffff", shadow:"#94a3b8", glow:"#e2e8f055", label:"WHITE", border:"#e2e8f066", bg:"linear-gradient(135deg,#0a0e1a,#33415533)" },
+    ],
+  },
+  ice: {
+    label:"❄️ Ice", animated:false,
+    bg:"#000d1a", card:"#001a33", border:"#0ea5e9", text:"#e0f2fe", muted:"#7dd3fc", accent:"#38bdf8",
+    top3:[
+      { cup:"#e0f2fe", shine:"#ffffff", shadow:"#0369a1", glow:"#e0f2fe55", label:"DIAMOND", border:"#e0f2fe66", bg:"linear-gradient(135deg,#001a33,#000d1a)" },
+      { cup:"#7dd3fc", shine:"#bae6fd", shadow:"#0284c7", glow:"#7dd3fc55", label:"FROST",   border:"#7dd3fc66", bg:"linear-gradient(135deg,#001020,#000d1a)" },
+      { cup:"#38bdf8", shine:"#7dd3fc", shadow:"#0369a1", glow:"#38bdf855", label:"GLACIER", border:"#38bdf866", bg:"linear-gradient(135deg,#000d20,#000d1a)" },
+    ],
+  },
 };
 
 const BADGES = [
@@ -69,8 +112,9 @@ const initStats  = () => ({ transfer:0, sold_transfer:0, closed_transfer:0, own_
 const DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 const LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
 
-function Trophy({ rank, size=48 }) {
-  const c = TROPHY_COLORS.dark[rank];
+// ── Trophy ────────────────────────────────────────────────────
+function Trophy({ rank, size=48, colors }) {
+  const c = colors || TROPHY_COLORS.dark[rank];
   if (!c) return null;
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
@@ -91,14 +135,15 @@ function Trophy({ rank, size=48 }) {
   );
 }
 
+// ── Confetti ──────────────────────────────────────────────────
 function Confetti({ active }) {
   const colors = ["#f59e0b","#60a5fa","#34d399","#f472b6","#a78bfa","#fb923c"];
   if (!active) return null;
   return (
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
-      {Array.from({length:60}).map((_,i) => {
-        const left=Math.random()*100, delay=Math.random()*1.5, dur=2+Math.random()*1.5;
-        const color=colors[i%colors.length], sz=6+Math.random()*8;
+      {Array.from({length:80}).map((_,i) => {
+        const left=Math.random()*100, delay=Math.random()*2, dur=2+Math.random()*2;
+        const color=colors[i%colors.length], sz=6+Math.random()*10;
         return <div key={i} style={{position:"absolute",left:`${left}%`,top:"-20px",width:sz,height:sz,background:color,borderRadius:Math.random()>0.5?"50%":"2px",animation:`fall ${dur}s ${delay}s linear forwards`}}/>;
       })}
       <style>{`@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}`}</style>
@@ -106,17 +151,15 @@ function Confetti({ active }) {
   );
 }
 
+// ── Celebration Banner ────────────────────────────────────────
 function CelebrationBanner({ celebration }) {
   if (!celebration) return null;
-  const isSale = celebration.type === "own_sale";
-  const isSentClosed = celebration.type === "sold_transfer";
-  const isBadge = celebration.type === "badge";
-  const message = isSale ? "🏆 OWN SALE!" : isSentClosed ? "✅ SENT & CLOSED!" : "🎖️ BADGE EARNED!";
+  const msg = celebration.type==="own_sale" ? "🏆 OWN SALE!" : celebration.type==="sold_transfer" ? "✅ SENT & CLOSED!" : "🎖️ BADGE EARNED!";
   return (
     <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
       <div style={{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"}}>
         <div style={{fontSize:"clamp(18px,4vw,48px)",fontWeight:900,color:"#fbbf24",letterSpacing:4,marginBottom:12,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"}}>
-          {message}
+          {msg}
         </div>
         <div style={{fontSize:"clamp(32px,8vw,96px)",fontWeight:900,color:"#ffffff",letterSpacing:2,textShadow:"0 0 60px #60a5fa,0 0 120px #3b82f688",fontFamily:"'Trebuchet MS',sans-serif",lineHeight:1.1}}>
           {celebration.name}
@@ -129,6 +172,9 @@ function CelebrationBanner({ celebration }) {
     </div>
   );
 }
+
+// ── Login ─────────────────────────────────────────────────────
+function LoginScreen({ agents, onLogin }) {
   const all = [...ADMIN_MANAGERS, ...agents].sort((a,b)=>a.name.localeCompare(b.name));
   const [selId,setSelId] = useState("");
   const [pw,setPw]       = useState("");
@@ -191,6 +237,7 @@ const L = {
   btn:{padding:"13px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#2563eb,#1d4ed8)",color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",letterSpacing:1,marginTop:4},
 };
 
+// ── Change Password Modal ─────────────────────────────────────
 function ChangePwModal({ user, onClose }) {
   const [cur,setCur]   = useState("");
   const [nw,setNw]     = useState("");
@@ -232,6 +279,7 @@ function ChangePwModal({ user, onClose }) {
   );
 }
 
+// ── Main App ──────────────────────────────────────────────────
 export default function App() {
   const [agents,setAgents]           = useState(AGENTS_DEFAULT);
   const [stats,setStats]             = useState(() => Object.fromEntries(AGENTS_DEFAULT.map(a=>[a.id,initStats()])));
@@ -240,6 +288,7 @@ export default function App() {
   const [view,setView]               = useState("board");
   const [flash,setFlash]             = useState(null);
   const [confetti,setConfetti]       = useState(false);
+  const [celebration,setCelebration] = useState(null);
   const [loaded,setLoaded]           = useState(false);
   const [newName,setNewName]         = useState("");
   const [announcement,setAnn]       = useState("");
@@ -249,10 +298,10 @@ export default function App() {
   const [editPrize,setEditPrize]     = useState(false);
   const [prizeDraft,setPrizeDraft]   = useState({ gold:"", silver:"", bronze:"" });
   const [theme,setTheme]             = useState(()=>{ try { return localStorage.getItem("mgl-theme")||"dark"; } catch(e){ return "dark"; } });
-  const [tvTheme,setTvTheme]         = useState(()=>{ try { return localStorage.getItem("mgl-tv-theme")||"dark"; } catch(e){ return "dark"; } });
+  const [tvTheme,setTvTheme]         = useState(()=>{ try { return localStorage.getItem("mgl-tv-theme")||"midnight"; } catch(e){ return "midnight"; } });
   const [showPwModal,setShowPwModal] = useState(false);
   const [weekLabel,setWeekLabel]     = useState("");
-  const [celebration, setCelebration] = useState(null); // { name, type }
+  const [tvMode,setTvMode]           = useState(false);
 
   const login  = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
   const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
@@ -260,7 +309,7 @@ export default function App() {
   const isManager    = currentUser?.role === "Manager";
   const canSeePrizes = currentUser && !PRIZE_RESTRICTED_IDS.includes(currentUser.id);
   const T            = theme==="dark" ? DARK : LIGHT;
-  const TV           = TV_THEMES[tvTheme] || TV_THEMES.dark;
+  const TV           = TV_THEMES[tvTheme] || TV_THEMES.midnight;
 
   const todayStr = new Date().toDateString();
 
@@ -271,48 +320,35 @@ export default function App() {
   const playSound = () => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const notes = [523, 659, 784, 1047];
-      notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+      [523,659,784,1047].forEach((freq,i) => {
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value = freq; osc.type = "sine";
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + i*0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.3);
-        osc.start(ctx.currentTime + i*0.12);
-        osc.stop(ctx.currentTime + i*0.12 + 0.3);
+        osc.frequency.value=freq; osc.type="sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.12+0.3);
+        osc.start(ctx.currentTime+i*0.12);
+        osc.stop(ctx.currentTime+i*0.12+0.3);
       });
     } catch(e) {}
   };
 
   // Global celebration listener
   useEffect(()=>{
-    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
+    const unsub = onSnapshot(doc(db,"settings","celebrate"), snap=>{
       if(snap.exists() && snap.data().active){
         const d = snap.data();
         setConfetti(true); playSound();
-        setCelebration({ name: d.by, type: d.type });
-        setTimeout(()=>setConfetti(false), 10000);
-        setTimeout(()=>setCelebration(null), 10000);
+        setCelebration({ name:d.by, type:d.type });
+        setTimeout(()=>{ setConfetti(false); setCelebration(null); }, 10000);
       }
     });
-    return ()=>unsubCelebrate();
-  },[]);
-
-  // Global celebration listener
-  useEffect(()=>{
-    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
-      if(snap.exists() && snap.data().active){
-        setConfetti(true); playSound();
-        setTimeout(()=>setConfetti(false), 3500);
-      }
-    });
-    return ()=>unsubCelebrate();
+    return ()=>unsub();
   },[]);
 
   useEffect(()=>{
+    const unsubSettings = onSnapshot(doc(db,"settings","main"), snap=>{
       if(snap.exists()){
-        const d = snap.data();
+        const d=snap.data();
         if(d.agents)                     setAgents(d.agents);
         if(d.stats)                      setStats(d.stats);
         if(d.announcement !== undefined) setAnn(d.announcement);
@@ -333,26 +369,26 @@ export default function App() {
     catch(e){ console.error(e); }
   };
 
-  const changeTheme = (t) => { setTheme(t); try { localStorage.setItem("mgl-theme",t); } catch(e){} };
+  const changeTheme   = (t) => { setTheme(t);   try { localStorage.setItem("mgl-theme",t); } catch(e){} };
   const changeTvTheme = (t) => { setTvTheme(t); try { localStorage.setItem("mgl-tv-theme",t); } catch(e){} };
 
   const addActivity = async (agentId, type) => {
-    const agent   = agents.find(a=>a.id===agentId);
-    const prev    = stats[agentId] || initStats();
-    const prevPts = calcPoints(prev);
-    const prevTdp = getTodayPoints(agentId);
-    const newStat = { ...prev, [type]:(prev[type]||0)+1 };
-    const newPts  = calcPoints(newStat);
-    const newTdp  = prevTdp + (POINT_VALUES[type]||0);
+    const agent    = agents.find(a=>a.id===agentId);
+    const prev     = stats[agentId] || initStats();
+    const prevPts  = calcPoints(prev);
+    const prevTdp  = getTodayPoints(agentId);
+    const newStat  = { ...prev, [type]:(prev[type]||0)+1 };
+    const newPts   = calcPoints(newStat);
+    const newTdp   = prevTdp + (POINT_VALUES[type]||0);
     const newStats = { ...stats, [agentId]:newStat };
     setStats(newStats);
     setFlash({ agentId, type });
     setTimeout(()=>setFlash(null),1200);
     await saveSettings({ stats: newStats });
     await addDoc(collection(db,"activityLog"),{
-      time: serverTimestamp(), agentId, agentName:agent?.name, type, by:currentUser.name
+      time:serverTimestamp(), agentId, agentName:agent?.name, type, by:currentUser.name
     });
-    const shouldCelebrate = type === "sold_transfer" || type === "own_sale";
+    const shouldCelebrate = type==="sold_transfer" || type==="own_sale";
     const milestone = BADGES.find(b=>b.condition(newStat,newPts,newTdp)&&!b.condition(prev,prevPts,prevTdp));
     if(shouldCelebrate || milestone){
       const celebType = shouldCelebrate ? type : "badge";
@@ -362,8 +398,8 @@ export default function App() {
   };
 
   const removeActivity = async (agentId, type) => {
-    const prev = stats[agentId] || initStats();
-    const newStat = { ...prev, [type]:Math.max(0,(prev[type]||0)-1) };
+    const prev     = stats[agentId] || initStats();
+    const newStat  = { ...prev, [type]:Math.max(0,(prev[type]||0)-1) };
     const newStats = { ...stats, [agentId]:newStat };
     setStats(newStats);
     await saveSettings({ stats: newStats });
@@ -371,9 +407,9 @@ export default function App() {
 
   const addAgent = async () => {
     if(!newName.trim()) return;
-    const id = Date.now();
-    const newAgents = [...agents, {id, name:newName.trim(), role:"Agent"}];
-    const newStats  = { ...stats, [id]:initStats() };
+    const id       = Date.now();
+    const newAgents= [...agents, {id, name:newName.trim(), role:"Agent"}];
+    const newStats = { ...stats, [id]:initStats() };
     setAgents(newAgents); setStats(newStats); setNewName("");
     await saveSettings({ agents:newAgents, stats:newStats });
   };
@@ -414,7 +450,6 @@ export default function App() {
   const navItems    = ["board","entry","stats",...(isManager?["feed","manage"]:[])];
   const myData      = ranked.find(a=>a.id===currentUser?.id);
   const myRank      = myData ? ranked.indexOf(myData)+1 : null;
-  const myBadges    = myData ? BADGES.filter(b=>b.condition(myData.stats,myData.points,getTodayPoints(myData.id))) : [];
 
   if(!loaded) return (
     <div style={{minHeight:"100vh",background:"#0a0f1e",display:"flex",alignItems:"center",justifyContent:"center",color:"#60a5fa",fontSize:18,fontWeight:700,fontFamily:"'Trebuchet MS',sans-serif"}}>
@@ -428,12 +463,18 @@ export default function App() {
     <div style={{...S.root,background:T.bg,color:T.text}}>
       <Confetti active={confetti}/>
       <CelebrationBanner celebration={celebration}/>
-      {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/> }
+      {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/>}
 
       {/* TV MODE */}
       {tvMode && (
-        <div style={{position:"fixed",inset:0,background:TV.animated?undefined:TV.bg,backgroundImage:TV.animated?TV.animBg:undefined,backgroundSize:TV.animated?"400% 400%":undefined,animation:TV.animated?"tvAnim 8s ease infinite":undefined,zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
-          {TV.animated && <style>{TV.animStyle+` @keyframes tvAnim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}`}</style>}
+        <div style={{
+          position:"fixed",inset:0,zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden",
+          background:TV.animated?undefined:TV.bg,
+          backgroundImage:TV.animated?TV.animBg:undefined,
+          backgroundSize:TV.animated?"400% 400%":undefined,
+          animation:TV.animated?"tvAnim 8s ease infinite":undefined,
+        }}>
+          {TV.animated && <style>{TV.animStyle}</style>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
             <div>
               <div style={{fontSize:13,letterSpacing:6,color:TV.accent,fontWeight:700}}>McDONALD GROUP</div>
@@ -466,7 +507,7 @@ export default function App() {
             {ranked.map((agent,idx)=>{
               const maxPts=ranked[0]?.points||1, pct=maxPts>0?(agent.points/maxPts)*100:0;
               const isTop3=idx<3;
-              const tc = isTop3 ? TV.top3[idx] : null;
+              const tc=isTop3?TV.top3[idx]:null;
               const agentBadges=BADGES.filter(b=>b.condition(agent.stats,agent.points,getTodayPoints(agent.id)));
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"14px 24px",
@@ -474,21 +515,9 @@ export default function App() {
                   border:isTop3?`1px solid ${tc.border}`:`1px solid ${TV.border}`,
                   boxShadow:isTop3?`0 0 24px ${tc.glow}`:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                    {isTop3?(
-                      <>
-                        <svg width={52} height={52} viewBox="0 0 48 48" fill="none">
-                          <defs><radialGradient id={`tvglow${idx}`} cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={tc.shine} stopOpacity="0.9"/><stop offset="100%" stopColor={tc.cup} stopOpacity="0.6"/></radialGradient></defs>
-                          <rect x="14" y="40" width="20" height="3" rx="1.5" fill={tc.shadow}/>
-                          <rect x="20" y="34" width="8" height="7" rx="1" fill={tc.cup}/>
-                          <path d="M10 16 Q6 16 6 22 Q6 28 12 28" stroke={tc.cup} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                          <path d="M38 16 Q42 16 42 22 Q42 28 36 28" stroke={tc.cup} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                          <path d="M12 10 L36 10 L32 30 Q28 34 24 34 Q20 34 16 30 Z" fill={`url(#tvglow${idx})`}/>
-                          <path d="M16 13 Q18 11 22 12" stroke={tc.shine} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.7"/>
-                          <text x="24" y="25" textAnchor="middle" fontSize="10" fill={tc.shadow} fontWeight="bold">★</text>
-                        </svg>
-                        <span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span>
-                      </>
-                    ):<span style={{fontSize:24,fontWeight:900,color:TV.muted}}>{idx+1}</span>}
+                    {isTop3
+                      ? <><Trophy rank={idx} size={52} colors={tc}/><span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>
+                      : <span style={{fontSize:24,fontWeight:900,color:TV.muted}}>{idx+1}</span>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:22,fontWeight:900,color:isTop3?tc.shine:TV.text,display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
@@ -500,7 +529,8 @@ export default function App() {
                       ))}
                     </div>
                     <div style={{height:8,background:TV.border,borderRadius:4,overflow:"hidden"}}>
-                      <div style={{height:"100%",borderRadius:4,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:`linear-gradient(90deg,${TV.accent},${TV.muted})`}}/>
+                      <div style={{height:"100%",borderRadius:4,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",
+                        background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:`linear-gradient(90deg,${TV.accent},${TV.muted})`}}/>
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
@@ -514,6 +544,7 @@ export default function App() {
         </div>
       )}
 
+      {/* ANNOUNCEMENT */}
       {(announcement||isManager) && (
         <div style={{...S.banner,background:T.bannerBg,borderBottom:`1px solid ${T.border}`}}>
           {editAnn ? (
@@ -532,6 +563,7 @@ export default function App() {
         </div>
       )}
 
+      {/* HEADER */}
       <div style={{...S.header,background:T.headerBg,borderBottom:`1px solid ${T.border}`}}>
         <div>
           <div style={{fontSize:11,letterSpacing:4,color:"#60a5fa",fontWeight:700,marginBottom:2}}>McDONALD GROUP</div>
@@ -566,6 +598,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* PRIZES */}
       {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze||isManager) && (
         <div style={{...S.prizeBanner,background:T.cardBg,borderBottom:`1px solid ${T.border}`}}>
           {editPrize ? (
@@ -597,6 +630,7 @@ export default function App() {
         </div>
       )}
 
+      {/* STATS BAR */}
       <div style={{display:"flex",gap:12,padding:"14px 24px",flexWrap:"wrap"}}>
         {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans},{label:"ACTIVE AGENTS",value:agents.length}].map(s=>(
           <div key={s.label} style={{flex:"1 1 110px",background:T.cardBg,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
@@ -606,6 +640,7 @@ export default function App() {
         ))}
       </div>
 
+      {/* BOARD */}
       {view==="board" && (
         <div style={S.content}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
@@ -630,7 +665,9 @@ export default function App() {
                   boxShadow:isTop3?`0 0 18px ${tc.glow}`:isMe?"0 0 14px #2563eb33":"none",
                   ...(isFlash?{background:"#1a3a1a",border:"1px solid #34d399"}:{})}}>
                   <div style={{width:52,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                    {isTop3?<><Trophy rank={idx} size={44}/><span style={{fontSize:9,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>:<span style={{fontSize:18,fontWeight:900,color:T.muted}}>{idx+1}</span>}
+                    {isTop3
+                      ? <><Trophy rank={idx} size={44}/><span style={{fontSize:9,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>
+                      : <span style={{fontSize:18,fontWeight:900,color:T.muted}}>{idx+1}</span>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:16,fontWeight:800,color:isTop3?tc.shine:T.text,display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
@@ -644,7 +681,8 @@ export default function App() {
                       ))}
                     </div>
                     <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:6}}>
-                      <div style={{height:"100%",borderRadius:3,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
+                      <div style={{height:"100%",borderRadius:3,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",
+                        background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
                     </div>
                     <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
                       <span style={{fontSize:11,color:"#60a5fa"}}>⟶ {agent.stats.transfer} transfers</span>
@@ -665,6 +703,7 @@ export default function App() {
         </div>
       )}
 
+      {/* LOG ACTIVITY */}
       {view==="entry" && (
         <div style={S.content}>
           <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:6,letterSpacing:1}}>Log Activity</div>
@@ -696,6 +735,7 @@ export default function App() {
         </div>
       )}
 
+      {/* STATS */}
       {view==="stats" && (
         <div style={S.content}>
           <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:20,letterSpacing:1}}>{myData?`${currentUser.name}'s Stats`:"Team Stats"}</div>
@@ -750,6 +790,7 @@ export default function App() {
         </div>
       )}
 
+      {/* FEED */}
       {view==="feed" && isManager && (
         <div style={S.content}>
           <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:20,letterSpacing:1}}>Activity Feed</div>
@@ -770,6 +811,7 @@ export default function App() {
         </div>
       )}
 
+      {/* MANAGE */}
       {view==="manage" && isManager && (
         <div style={S.content}>
           <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:16,letterSpacing:1}}>Manage Agents</div>
