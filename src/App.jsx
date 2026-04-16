@@ -44,6 +44,15 @@ const TROPHY_COLORS = {
   },
 };
 
+const TV_THEMES = {
+  dark:   { bg:"#0a0f1e", card:"#0f172a", border:"#1e3a5f", text:"#f1f5f9", muted:"#64748b", accent:"#60a5fa", label:"🌙 Dark" },
+  fire:   { bg:"#1a0500", card:"#2d0a00", border:"#7c2d12", text:"#fef3c7", muted:"#fb923c", accent:"#f97316", label:"🔥 Fire" },
+  neon:   { bg:"#000d00", card:"#001a00", border:"#16a34a", text:"#dcfce7", muted:"#4ade80", accent:"#22c55e", label:"💚 Neon" },
+  galaxy: { bg:"#05001a", card:"#0d0030", border:"#7c3aed", text:"#ede9fe", muted:"#a78bfa", accent:"#8b5cf6", label:"🌌 Galaxy" },
+  gold:   { bg:"#1a1000", card:"#2a1a00", border:"#b45309", text:"#fef9c3", muted:"#fbbf24", accent:"#f59e0b", label:"🏆 Gold" },
+  ice:    { bg:"#001a2e", card:"#002440", border:"#0ea5e9", text:"#e0f2fe", muted:"#7dd3fc", accent:"#38bdf8", label:"❄️ Ice" },
+};
+
 const BADGES = [
   { id:"first_sale",    label:"First Sale",   icon:"🎯", condition:(s,pts,tdp) => s.own_sale >= 1 },
   { id:"ten_transfers", label:"10 Transfers", icon:"⚡", condition:(s,pts,tdp) => s.transfer >= 10 },
@@ -205,9 +214,7 @@ export default function App() {
   const [agents,setAgents]           = useState(AGENTS_DEFAULT);
   const [stats,setStats]             = useState(() => Object.fromEntries(AGENTS_DEFAULT.map(a=>[a.id,initStats()])));
   const [actLog,setActLog]           = useState([]);
-  const [currentUser,setUser] = useState(()=>{
-    try { const u = localStorage.getItem("mgl-user"); return u ? JSON.parse(u) : null; } catch(e){ return null; }
-  });
+  const [currentUser,setUser]        = useState(()=>{ try { const u=localStorage.getItem("mgl-user"); return u?JSON.parse(u):null; } catch(e){ return null; } });
   const [view,setView]               = useState("board");
   const [flash,setFlash]             = useState(null);
   const [confetti,setConfetti]       = useState(false);
@@ -219,25 +226,19 @@ export default function App() {
   const [prizes,setPrizes]           = useState({ gold:"", silver:"", bronze:"" });
   const [editPrize,setEditPrize]     = useState(false);
   const [prizeDraft,setPrizeDraft]   = useState({ gold:"", silver:"", bronze:"" });
-  const [theme,setTheme]             = useState("dark");
+  const [theme,setTheme]             = useState(()=>{ try { return localStorage.getItem("mgl-theme")||"dark"; } catch(e){ return "dark"; } });
+  const [tvTheme,setTvTheme]         = useState(()=>{ try { return localStorage.getItem("mgl-tv-theme")||"dark"; } catch(e){ return "dark"; } });
   const [showPwModal,setShowPwModal] = useState(false);
   const [weekLabel,setWeekLabel]     = useState("");
   const [tvMode,setTvMode]           = useState(false);
 
-  // Global celebration listener
-  useEffect(()=>{
-    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
-      if(snap.exists()){
-        const d = snap.data();
-        if(d.active){
-          setConfetti(true);
-          playSound();
-          setTimeout(()=>setConfetti(false), 3500);
-        }
-      }
-    });
-    return ()=>unsubCelebrate();
-  },[]);
+  const login  = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
+  const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
+
+  const isManager    = currentUser?.role === "Manager";
+  const canSeePrizes = currentUser && !PRIZE_RESTRICTED_IDS.includes(currentUser.id);
+  const T            = theme==="dark" ? DARK : LIGHT;
+  const TV           = TV_THEMES[tvTheme] || TV_THEMES.dark;
 
   const todayStr = new Date().toDateString();
 
@@ -252,17 +253,26 @@ export default function App() {
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = "sine";
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
-        osc.start(ctx.currentTime + i * 0.12);
-        osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = "sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + i*0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.3);
+        osc.start(ctx.currentTime + i*0.12);
+        osc.stop(ctx.currentTime + i*0.12 + 0.3);
       });
     } catch(e) {}
   };
+
+  // Global celebration listener
+  useEffect(()=>{
+    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
+      if(snap.exists() && snap.data().active){
+        setConfetti(true); playSound();
+        setTimeout(()=>setConfetti(false), 3500);
+      }
+    });
+    return ()=>unsubCelebrate();
+  },[]);
 
   useEffect(()=>{
     const unsubSettings = onSnapshot(doc(db,"settings","main"), snap=>{
@@ -272,7 +282,6 @@ export default function App() {
         if(d.stats)                      setStats(d.stats);
         if(d.announcement !== undefined) setAnn(d.announcement);
         if(d.prizes)                     setPrizes(d.prizes);
-        if(d.theme)                      setTheme(d.theme);
         if(d.weekLabel !== undefined)    setWeekLabel(d.weekLabel);
       }
       setLoaded(true);
@@ -289,12 +298,8 @@ export default function App() {
     catch(e){ console.error(e); }
   };
 
-  const login = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
-  const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
-
-  const isManager    = currentUser?.role === "Manager";
-  const canSeePrizes = currentUser && !PRIZE_RESTRICTED_IDS.includes(currentUser.id);
-  const T            = theme==="dark" ? DARK : LIGHT;
+  const changeTheme = (t) => { setTheme(t); try { localStorage.setItem("mgl-theme",t); } catch(e){} };
+  const changeTvTheme = (t) => { setTvTheme(t); try { localStorage.setItem("mgl-tv-theme",t); } catch(e){} };
 
   const addActivity = async (agentId, type) => {
     const agent   = agents.find(a=>a.id===agentId);
@@ -313,15 +318,9 @@ export default function App() {
       time: serverTimestamp(), agentId, agentName:agent?.name, type, by:currentUser.name
     });
     const shouldCelebrate = type === "sold_transfer" || type === "own_sale";
-    if(shouldCelebrate){
-      setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500);
-      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type, time:Date.now() });
-      setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 4000);
-    }
     const milestone = BADGES.find(b=>b.condition(newStat,newPts,newTdp)&&!b.condition(prev,prevPts,prevTdp));
-    if(milestone && !shouldCelebrate){
-      setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500);
-      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type:"badge", time:Date.now() });
+    if(shouldCelebrate || milestone){
+      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type, time:Date.now() });
       setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 4000);
     }
   };
@@ -396,27 +395,34 @@ export default function App() {
 
       {/* TV MODE */}
       {tvMode && (
-        <div style={{position:"fixed",inset:0,background:"#0a0f1e",zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
+        <div style={{position:"fixed",inset:0,background:TV.bg,zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
             <div>
-              <div style={{fontSize:13,letterSpacing:6,color:"#60a5fa",fontWeight:700}}>McDONALD GROUP</div>
+              <div style={{fontSize:13,letterSpacing:6,color:TV.accent,fontWeight:700}}>McDONALD GROUP</div>
               <div style={{fontSize:36,fontWeight:900,background:"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
             </div>
-            <div style={{display:"flex",gap:24,alignItems:"center"}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans}].map(s=>(
-                <div key={s.label} style={{textAlign:"center",background:"#0f172a",border:"1px solid #1e3a5f",borderRadius:12,padding:"12px 24px"}}>
-                  <div style={{fontSize:32,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
-                  <div style={{fontSize:10,letterSpacing:2,color:"#64748b",marginTop:4,fontWeight:700}}>{s.label}</div>
+                <div key={s.label} style={{textAlign:"center",background:TV.card,border:`1px solid ${TV.border}`,borderRadius:12,padding:"10px 20px"}}>
+                  <div style={{fontSize:28,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
+                  <div style={{fontSize:10,letterSpacing:2,color:TV.muted,marginTop:4,fontWeight:700}}>{s.label}</div>
                 </div>
               ))}
-              <button onClick={()=>setTvMode(false)} style={{padding:"8px 16px",borderRadius:8,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:13,fontWeight:700}}>Exit</button>
+              {/* TV Theme Selector */}
+              <select value={tvTheme} onChange={e=>changeTvTheme(e.target.value)}
+                style={{padding:"8px 12px",borderRadius:8,border:`1px solid ${TV.border}`,background:TV.card,color:TV.text,fontSize:12,cursor:"pointer",outline:"none"}}>
+                {Object.entries(TV_THEMES).map(([key,val])=>(
+                  <option key={key} value={key}>{val.label}</option>
+                ))}
+              </select>
+              <button onClick={()=>setTvMode(false)} style={{padding:"8px 16px",borderRadius:8,border:`1px solid ${TV.border}`,background:"transparent",color:TV.muted,cursor:"pointer",fontSize:13,fontWeight:700}}>Exit</button>
             </div>
           </div>
           {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
             <div style={{display:"flex",gap:16,marginBottom:16,justifyContent:"center"}}>
-              {prizes.gold   && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥇 {prizes.gold}</span>}
-              {prizes.silver && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥈 {prizes.silver}</span>}
-              {prizes.bronze && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥉 {prizes.bronze}</span>}
+              {prizes.gold   && <span style={{fontSize:16,fontWeight:700,color:TV.text,background:TV.card,border:`1px solid ${TV.border}`,padding:"6px 18px",borderRadius:20}}>🥇 {prizes.gold}</span>}
+              {prizes.silver && <span style={{fontSize:16,fontWeight:700,color:TV.text,background:TV.card,border:`1px solid ${TV.border}`,padding:"6px 18px",borderRadius:20}}>🥈 {prizes.silver}</span>}
+              {prizes.bronze && <span style={{fontSize:16,fontWeight:700,color:TV.text,background:TV.card,border:`1px solid ${TV.border}`,padding:"6px 18px",borderRadius:20}}>🥉 {prizes.bronze}</span>}
             </div>
           )}
           <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
@@ -426,29 +432,29 @@ export default function App() {
               const agentBadges=BADGES.filter(b=>b.condition(agent.stats,agent.points,getTodayPoints(agent.id)));
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"14px 24px",
-                  background:isTop3?tc.bg:"#0f172a",
-                  border:isTop3?`1px solid ${tc.border}`:"1px solid #1e3a5f",
+                  background:isTop3?tc.bg:TV.card,
+                  border:isTop3?`1px solid ${tc.border}`:`1px solid ${TV.border}`,
                   boxShadow:isTop3?`0 0 24px ${tc.glow}`:"none"}}>
                   <div style={{width:60,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                     {isTop3?<><Trophy rank={idx} size={52}/><span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>
-                    :<span style={{fontSize:24,fontWeight:900,color:"#475569"}}>{idx+1}</span>}
+                    :<span style={{fontSize:24,fontWeight:900,color:TV.muted}}>{idx+1}</span>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:22,fontWeight:900,color:isTop3?tc.shine:"#f1f5f9",display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+                    <div style={{fontSize:22,fontWeight:900,color:isTop3?tc.shine:TV.text,display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
                       {agent.name}
                       {agentBadges.map(b=>(
-                        <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,padding:"2px 10px",borderRadius:20,background:"#1e293b",border:"1px solid #f59e0b66",color:"#fbbf24"}}>
+                        <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,padding:"2px 10px",borderRadius:20,background:TV.card,border:"1px solid #f59e0b66",color:"#fbbf24"}}>
                           {b.icon} {b.label}
                         </span>
                       ))}
                     </div>
-                    <div style={{height:8,background:"#1e293b",borderRadius:4,overflow:"hidden"}}>
-                      <div style={{height:"100%",borderRadius:4,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
+                    <div style={{height:8,background:TV.border,borderRadius:4,overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:4,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:`linear-gradient(90deg,${TV.accent},${TV.muted})`}}/>
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
-                    <span style={{fontSize:isTop3?48:40,fontWeight:900,color:isTop3?tc.cup:"#60a5fa",lineHeight:1}}>{agent.points}</span>
-                    <span style={{fontSize:12,color:"#475569",letterSpacing:2,fontWeight:700}}>PTS</span>
+                    <span style={{fontSize:isTop3?48:40,fontWeight:900,color:isTop3?tc.cup:TV.accent,lineHeight:1}}>{agent.points}</span>
+                    <span style={{fontSize:12,color:TV.muted,letterSpacing:2,fontWeight:700}}>PTS</span>
                   </div>
                 </div>
               );
@@ -488,7 +494,7 @@ export default function App() {
                 {v==="board"?"🏆 Board":v==="entry"?"➕ Log":v==="stats"?"📈 Stats":v==="feed"?"📋 Feed":"⚙️ Manage"}
               </button>
             ))}
-            <button onClick={async()=>{const t=theme==="dark"?"light":"dark";setTheme(t);await saveSettings({theme:t});}}
+            <button onClick={()=>changeTheme(theme==="dark"?"light":"dark")}
               style={{...S.navBtn,border:`1px solid ${T.border}`,color:T.muted}}>
               {theme==="dark"?"☀️":"🌙"}
             </button>
