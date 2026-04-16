@@ -222,6 +222,21 @@ export default function App() {
   const [weekLabel,setWeekLabel]     = useState("");
   const [tvMode,setTvMode]           = useState(false);
 
+  // Global celebration listener
+  useEffect(()=>{
+    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
+      if(snap.exists()){
+        const d = snap.data();
+        if(d.active){
+          setConfetti(true);
+          playSound();
+          setTimeout(()=>setConfetti(false), 3500);
+        }
+      }
+    });
+    return ()=>unsubCelebrate();
+  },[]);
+
   const todayStr = new Date().toDateString();
 
   const getTodayPoints = (agentId) =>
@@ -293,9 +308,17 @@ export default function App() {
       time: serverTimestamp(), agentId, agentName:agent?.name, type, by:currentUser.name
     });
     const shouldCelebrate = type === "sold_transfer" || type === "own_sale";
-    if(shouldCelebrate){ setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500); }
+    if(shouldCelebrate){
+      setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500);
+      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type, time:Date.now() });
+      setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 4000);
+    }
     const milestone = BADGES.find(b=>b.condition(newStat,newPts,newTdp)&&!b.condition(prev,prevPts,prevTdp));
-    if(milestone && !shouldCelebrate){ setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500); }
+    if(milestone && !shouldCelebrate){
+      setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500);
+      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type:"badge", time:Date.now() });
+      setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 4000);
+    }
   };
 
   const removeActivity = async (agentId, type) => {
