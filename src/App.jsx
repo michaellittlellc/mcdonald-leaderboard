@@ -205,7 +205,9 @@ export default function App() {
   const [agents,setAgents]           = useState(AGENTS_DEFAULT);
   const [stats,setStats]             = useState(() => Object.fromEntries(AGENTS_DEFAULT.map(a=>[a.id,initStats()])));
   const [actLog,setActLog]           = useState([]);
-  const [currentUser,setUser]        = useState(null);
+  const [currentUser,setUser] = useState(()=>{
+    try { const u = localStorage.getItem("mgl-user"); return u ? JSON.parse(u) : null; } catch(e){ return null; }
+  });
   const [view,setView]               = useState("board");
   const [flash,setFlash]             = useState(null);
   const [confetti,setConfetti]       = useState(false);
@@ -287,7 +289,8 @@ export default function App() {
     catch(e){ console.error(e); }
   };
 
-  const isManager    = currentUser?.role === "Manager";
+  const login = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
+  const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
   const canSeePrizes = currentUser && !PRIZE_RESTRICTED_IDS.includes(currentUser.id);
   const T            = theme==="dark" ? DARK : LIGHT;
 
@@ -382,7 +385,7 @@ export default function App() {
     </div>
   );
 
-  if(!currentUser) return <LoginScreen agents={agents} onLogin={setUser}/>;
+  if(!currentUser) return <LoginScreen agents={agents} onLogin={login}/>;
 
   return (
     <div style={{...S.root,background:T.bg,color:T.text}}>
@@ -499,7 +502,7 @@ export default function App() {
             <span style={{fontSize:13,fontWeight:700,color:T.text}}>{currentUser.name}</span>
             {isManager && <span style={S.mgrTag}>MGR</span>}
             <button onClick={()=>setShowPwModal(true)} style={{...S.signOutBtn,color:T.muted,border:`1px solid ${T.border}`}}>🔑</button>
-            <button onClick={()=>{setUser(null);setView("board");}} style={{...S.signOutBtn,color:T.muted,border:`1px solid ${T.border}`}}>Sign out</button>
+            <button onClick={logout} style={{...S.signOutBtn,color:T.muted,border:`1px solid ${T.border}`}}>Sign out</button>
           </div>
         </div>
       </div>
