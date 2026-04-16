@@ -106,7 +106,29 @@ function Confetti({ active }) {
   );
 }
 
-function LoginScreen({ agents, onLogin }) {
+function CelebrationBanner({ celebration }) {
+  if (!celebration) return null;
+  const isSale = celebration.type === "own_sale";
+  const isSentClosed = celebration.type === "sold_transfer";
+  const isBadge = celebration.type === "badge";
+  const message = isSale ? "🏆 OWN SALE!" : isSentClosed ? "✅ SENT & CLOSED!" : "🎖️ BADGE EARNED!";
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+      <div style={{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"}}>
+        <div style={{fontSize:"clamp(18px,4vw,48px)",fontWeight:900,color:"#fbbf24",letterSpacing:4,marginBottom:12,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"}}>
+          {message}
+        </div>
+        <div style={{fontSize:"clamp(32px,8vw,96px)",fontWeight:900,color:"#ffffff",letterSpacing:2,textShadow:"0 0 60px #60a5fa,0 0 120px #3b82f688",fontFamily:"'Trebuchet MS',sans-serif",lineHeight:1.1}}>
+          {celebration.name}
+        </div>
+        <div style={{fontSize:"clamp(14px,2.5vw,28px)",color:"#94a3b8",marginTop:10,letterSpacing:3,fontFamily:"'Trebuchet MS',sans-serif"}}>
+          McDONALD GROUP
+        </div>
+      </div>
+      <style>{`@keyframes celebIn{0%{transform:scale(0.5) translateY(40px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}`}</style>
+    </div>
+  );
+}
   const all = [...ADMIN_MANAGERS, ...agents].sort((a,b)=>a.name.localeCompare(b.name));
   const [selId,setSelId] = useState("");
   const [pw,setPw]       = useState("");
@@ -230,7 +252,7 @@ export default function App() {
   const [tvTheme,setTvTheme]         = useState(()=>{ try { return localStorage.getItem("mgl-tv-theme")||"dark"; } catch(e){ return "dark"; } });
   const [showPwModal,setShowPwModal] = useState(false);
   const [weekLabel,setWeekLabel]     = useState("");
-  const [tvMode,setTvMode]           = useState(false);
+  const [celebration, setCelebration] = useState(null); // { name, type }
 
   const login  = (acct) => { setUser(acct); try { localStorage.setItem("mgl-user", JSON.stringify(acct)); } catch(e){} };
   const logout = () => { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); };
@@ -267,6 +289,20 @@ export default function App() {
   useEffect(()=>{
     const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
       if(snap.exists() && snap.data().active){
+        const d = snap.data();
+        setConfetti(true); playSound();
+        setCelebration({ name: d.by, type: d.type });
+        setTimeout(()=>setConfetti(false), 10000);
+        setTimeout(()=>setCelebration(null), 10000);
+      }
+    });
+    return ()=>unsubCelebrate();
+  },[]);
+
+  // Global celebration listener
+  useEffect(()=>{
+    const unsubCelebrate = onSnapshot(doc(db,"settings","celebrate"), snap=>{
+      if(snap.exists() && snap.data().active){
         setConfetti(true); playSound();
         setTimeout(()=>setConfetti(false), 3500);
       }
@@ -275,7 +311,6 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
-    const unsubSettings = onSnapshot(doc(db,"settings","main"), snap=>{
       if(snap.exists()){
         const d = snap.data();
         if(d.agents)                     setAgents(d.agents);
@@ -320,8 +355,9 @@ export default function App() {
     const shouldCelebrate = type === "sold_transfer" || type === "own_sale";
     const milestone = BADGES.find(b=>b.condition(newStat,newPts,newTdp)&&!b.condition(prev,prevPts,prevTdp));
     if(shouldCelebrate || milestone){
-      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type, time:Date.now() });
-      setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 4000);
+      const celebType = shouldCelebrate ? type : "badge";
+      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent?.name, type:celebType, time:Date.now() });
+      setTimeout(async()=>{ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 11000);
     }
   };
 
@@ -391,11 +427,13 @@ export default function App() {
   return (
     <div style={{...S.root,background:T.bg,color:T.text}}>
       <Confetti active={confetti}/>
-      {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/>}
+      <CelebrationBanner celebration={celebration}/>
+      {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/> }
 
       {/* TV MODE */}
       {tvMode && (
-        <div style={{position:"fixed",inset:0,background:TV.bg,zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
+        <div style={{position:"fixed",inset:0,background:TV.animated?undefined:TV.bg,backgroundImage:TV.animated?TV.animBg:undefined,backgroundSize:TV.animated?"400% 400%":undefined,animation:TV.animated?"tvAnim 8s ease infinite":undefined,zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
+          {TV.animated && <style>{TV.animStyle+` @keyframes tvAnim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}`}</style>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
             <div>
               <div style={{fontSize:13,letterSpacing:6,color:TV.accent,fontWeight:700}}>McDONALD GROUP</div>
@@ -408,7 +446,6 @@ export default function App() {
                   <div style={{fontSize:10,letterSpacing:2,color:TV.muted,marginTop:4,fontWeight:700}}>{s.label}</div>
                 </div>
               ))}
-              {/* TV Theme Selector */}
               <select value={tvTheme} onChange={e=>changeTvTheme(e.target.value)}
                 style={{padding:"8px 12px",borderRadius:8,border:`1px solid ${TV.border}`,background:TV.card,color:TV.text,fontSize:12,cursor:"pointer",outline:"none"}}>
                 {Object.entries(TV_THEMES).map(([key,val])=>(
@@ -428,16 +465,30 @@ export default function App() {
           <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
             {ranked.map((agent,idx)=>{
               const maxPts=ranked[0]?.points||1, pct=maxPts>0?(agent.points/maxPts)*100:0;
-              const tc=TROPHY_COLORS.dark[idx], isTop3=idx<3;
+              const isTop3=idx<3;
+              const tc = isTop3 ? TV.top3[idx] : null;
               const agentBadges=BADGES.filter(b=>b.condition(agent.stats,agent.points,getTodayPoints(agent.id)));
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"14px 24px",
                   background:isTop3?tc.bg:TV.card,
                   border:isTop3?`1px solid ${tc.border}`:`1px solid ${TV.border}`,
                   boxShadow:isTop3?`0 0 24px ${tc.glow}`:"none"}}>
-                  <div style={{width:60,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                    {isTop3?<><Trophy rank={idx} size={52}/><span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>
-                    :<span style={{fontSize:24,fontWeight:900,color:TV.muted}}>{idx+1}</span>}
+                  <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    {isTop3?(
+                      <>
+                        <svg width={52} height={52} viewBox="0 0 48 48" fill="none">
+                          <defs><radialGradient id={`tvglow${idx}`} cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={tc.shine} stopOpacity="0.9"/><stop offset="100%" stopColor={tc.cup} stopOpacity="0.6"/></radialGradient></defs>
+                          <rect x="14" y="40" width="20" height="3" rx="1.5" fill={tc.shadow}/>
+                          <rect x="20" y="34" width="8" height="7" rx="1" fill={tc.cup}/>
+                          <path d="M10 16 Q6 16 6 22 Q6 28 12 28" stroke={tc.cup} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M38 16 Q42 16 42 22 Q42 28 36 28" stroke={tc.cup} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          <path d="M12 10 L36 10 L32 30 Q28 34 24 34 Q20 34 16 30 Z" fill={`url(#tvglow${idx})`}/>
+                          <path d="M16 13 Q18 11 22 12" stroke={tc.shine} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.7"/>
+                          <text x="24" y="25" textAnchor="middle" fontSize="10" fill={tc.shadow} fontWeight="bold">★</text>
+                        </svg>
+                        <span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span>
+                      </>
+                    ):<span style={{fontSize:24,fontWeight:900,color:TV.muted}}>{idx+1}</span>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:22,fontWeight:900,color:isTop3?tc.shine:TV.text,display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
