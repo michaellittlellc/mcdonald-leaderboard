@@ -222,6 +222,12 @@ export default function App() {
   const [weekLabel,setWeekLabel]     = useState("");
   const [tvMode,setTvMode]           = useState(false);
 
+  const todayStr = new Date().toDateString();
+
+  const getTodayPoints = (agentId) =>
+    actLog.filter(e=>e.agentId===agentId && new Date(e.time?.toDate?.()??e.time).toDateString()===todayStr)
+          .reduce((sum,e)=>sum+(POINT_VALUES[e.type]||0),0);
+
   const playSound = () => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -240,9 +246,6 @@ export default function App() {
       });
     } catch(e) {}
   };
-  const getTodayPoints = (agentId) =>
-    actLog.filter(e=>e.agentId===agentId && new Date(e.time?.toDate?.()??e.time).toDateString()===todayStr)
-          .reduce((sum,e)=>sum+(POINT_VALUES[e.type]||0),0);
 
   useEffect(()=>{
     const unsubSettings = onSnapshot(doc(db,"settings","main"), snap=>{
@@ -292,7 +295,7 @@ export default function App() {
     const shouldCelebrate = type === "sold_transfer" || type === "own_sale";
     if(shouldCelebrate){ setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500); }
     const milestone = BADGES.find(b=>b.condition(newStat,newPts,newTdp)&&!b.condition(prev,prevPts,prevTdp));
-    if(milestone){ setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500); }
+    if(milestone && !shouldCelebrate){ setConfetti(true); playSound(); setTimeout(()=>setConfetti(false),3500); }
   };
 
   const removeActivity = async (agentId, type) => {
@@ -362,6 +365,69 @@ export default function App() {
     <div style={{...S.root,background:T.bg,color:T.text}}>
       <Confetti active={confetti}/>
       {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/>}
+
+      {/* TV MODE */}
+      {tvMode && (
+        <div style={{position:"fixed",inset:0,background:"#0a0f1e",zIndex:500,display:"flex",flexDirection:"column",padding:"24px 40px",overflow:"hidden"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div>
+              <div style={{fontSize:13,letterSpacing:6,color:"#60a5fa",fontWeight:700}}>McDONALD GROUP</div>
+              <div style={{fontSize:36,fontWeight:900,background:"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
+            </div>
+            <div style={{display:"flex",gap:24,alignItems:"center"}}>
+              {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans}].map(s=>(
+                <div key={s.label} style={{textAlign:"center",background:"#0f172a",border:"1px solid #1e3a5f",borderRadius:12,padding:"12px 24px"}}>
+                  <div style={{fontSize:32,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
+                  <div style={{fontSize:10,letterSpacing:2,color:"#64748b",marginTop:4,fontWeight:700}}>{s.label}</div>
+                </div>
+              ))}
+              <button onClick={()=>setTvMode(false)} style={{padding:"8px 16px",borderRadius:8,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:13,fontWeight:700}}>Exit</button>
+            </div>
+          </div>
+          {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
+            <div style={{display:"flex",gap:16,marginBottom:16,justifyContent:"center"}}>
+              {prizes.gold   && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥇 {prizes.gold}</span>}
+              {prizes.silver && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥈 {prizes.silver}</span>}
+              {prizes.bronze && <span style={{fontSize:16,fontWeight:700,color:"#f1f5f9",background:"#1e293b",padding:"6px 18px",borderRadius:20}}>🥉 {prizes.bronze}</span>}
+            </div>
+          )}
+          <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
+            {ranked.map((agent,idx)=>{
+              const maxPts=ranked[0]?.points||1, pct=maxPts>0?(agent.points/maxPts)*100:0;
+              const tc=TROPHY_COLORS.dark[idx], isTop3=idx<3;
+              const agentBadges=BADGES.filter(b=>b.condition(agent.stats,agent.points,getTodayPoints(agent.id)));
+              return (
+                <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"14px 24px",
+                  background:isTop3?tc.bg:"#0f172a",
+                  border:isTop3?`1px solid ${tc.border}`:"1px solid #1e3a5f",
+                  boxShadow:isTop3?`0 0 24px ${tc.glow}`:"none"}}>
+                  <div style={{width:60,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    {isTop3?<><Trophy rank={idx} size={52}/><span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</span></>
+                    :<span style={{fontSize:24,fontWeight:900,color:"#475569"}}>{idx+1}</span>}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:22,fontWeight:900,color:isTop3?tc.shine:"#f1f5f9",display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+                      {agent.name}
+                      {agentBadges.map(b=>(
+                        <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,padding:"2px 10px",borderRadius:20,background:"#1e293b",border:"1px solid #f59e0b66",color:"#fbbf24"}}>
+                          {b.icon} {b.label}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{height:8,background:"#1e293b",borderRadius:4,overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:4,width:`${pct}%`,transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?`linear-gradient(90deg,${tc.cup},${tc.shine})`:"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
+                    <span style={{fontSize:isTop3?48:40,fontWeight:900,color:isTop3?tc.cup:"#60a5fa",lineHeight:1}}>{agent.points}</span>
+                    <span style={{fontSize:12,color:"#475569",letterSpacing:2,fontWeight:700}}>PTS</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {(announcement||isManager) && (
         <div style={{...S.banner,background:T.bannerBg,borderBottom:`1px solid ${T.border}`}}>
