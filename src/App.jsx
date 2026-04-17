@@ -176,9 +176,6 @@ function getWeeklyVerse() {
 }
 
 function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3; }
-function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
-function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
-
 function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
