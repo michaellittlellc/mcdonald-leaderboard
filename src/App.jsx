@@ -570,6 +570,7 @@ export default function App() {
   var [showPwModal,setShowPwModal] = useState(false);
   var [weekLabel,setWeekLabel]     = useState("");
   var [tvMode,setTvMode]           = useState(false);
+  var [manualBadges,setManualBadges] = useState({});
 
   function login(acct)  { setUser(acct); try { localStorage.setItem("mgl-user",JSON.stringify(acct)); } catch(e){} }
   function logout()     { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); }
@@ -621,6 +622,7 @@ export default function App() {
         if(d.announcement !== undefined) setAnn(d.announcement);
         if(d.prizes)                     setPrizes(d.prizes);
         if(d.weekLabel !== undefined)    setWeekLabel(d.weekLabel);
+        if(d.manualBadges)               setManualBadges(d.manualBadges);
       }
       setLoaded(true);
     });
@@ -715,6 +717,28 @@ export default function App() {
     } catch(e){ console.error(e); }
   }
 
+
+  // Returns merged set of auto-earned + manually awarded badge IDs for an agent
+  function getAgentBadgeIds(agent) {
+    var autoBadges = BADGES
+      .filter(function(b){ return b.condition(agent.stats, agent.points, getTodayPoints(agent.id), getWeeklyHospital(agent.id)); })
+      .map(function(b){ return b.id; });
+    var manual = (manualBadges[String(agent.id)] || []);
+    var merged = autoBadges.slice();
+    manual.forEach(function(id){ if(merged.indexOf(id)===-1) merged.push(id); });
+    return merged;
+  }
+
+  async function toggleManualBadge(agentId, badgeId) {
+    var current = (manualBadges[String(agentId)] || []).slice();
+    var idx = current.indexOf(badgeId);
+    if(idx === -1) { current.push(badgeId); } else { current.splice(idx, 1); }
+    var newManual = Object.assign({}, manualBadges);
+    newManual[String(agentId)] = current;
+    setManualBadges(newManual);
+    await saveSettings({ manualBadges: newManual });
+  }
+
   var ranked = [...agents]
     .map(function(a){ return Object.assign({},a,{stats:stats[a.id]||initStats()}); })
     .map(function(a){ return Object.assign({},a,{points:calcPoints(a.stats),apps:calcApps(a.stats)}); })
@@ -806,7 +830,7 @@ export default function App() {
               var pct=maxPts>0?(agent.points/maxPts)*100:0;
               var isTop3=idx<3;
               var tc=isTop3?TV.top3[idx]:null;
-              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id),getWeeklyHospital(agent.id)); });
+              var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"12px 24px",background:isTop3?tc.bg:TV.card,border:isTop3?"1px solid "+tc.border:"1px solid "+TV.border,boxShadow:isTop3?"0 0 24px "+tc.glow:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
@@ -969,7 +993,7 @@ export default function App() {
               var pct=maxPts>0?(agent.points/maxPts)*100:0;
               var tc=TROPHY_COLORS[theme][idx];
               var isTop3=idx<3;
-              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id),getWeeklyHospital(agent.id)); });
+              var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
               var rowStyle = {
                 display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",transition:"all .3s",
                 background:isTop3?tc.bg:T.cardBg,
@@ -1083,7 +1107,7 @@ export default function App() {
               <div style={{fontSize:14,fontWeight:800,color:T.text,marginBottom:12,letterSpacing:1}}>YOUR BADGES</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                 {BADGES.map(function(b){
-                  var earned=b.condition(myData.stats,myData.points,getTodayPoints(myData.id),getWeeklyHospital(myData.id));
+                  var myBadgeIds=getAgentBadgeIds(myData); var earned=myBadgeIds.indexOf(b.id)!==-1;
                   return (
                     <div key={b.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",borderRadius:20,background:T.cardBg,border:"1px solid "+(earned?"#f59e0b66":T.border),opacity:earned?1:0.35}}>
                       <span style={{fontSize:16}}>{b.icon}</span>
@@ -1181,17 +1205,52 @@ export default function App() {
       {view==="manage" && isManager && (
         <div style={S.content}>
           <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:16,letterSpacing:1}}>Manage Agents</div>
-          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+
+          {/* Agent list with badge assignment */}
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
             {agents.map(function(a){
+              var agentManual = manualBadges[String(a.id)] || [];
+              var agentStats  = stats[a.id] || initStats();
+              var agentPts    = calcPoints(agentStats);
+              var agentData   = Object.assign({},a,{stats:agentStats,points:agentPts});
               return (
-                <div key={a.id} style={{display:"flex",alignItems:"center",gap:12,background:T.cardBg,border:"1px solid "+T.border,borderRadius:10,padding:"10px 16px"}}>
-                  <span style={{flex:1,fontSize:14,fontWeight:700,color:T.text}}>{a.name}</span>
-                  <span style={{fontSize:12,color:T.muted}}>{a.role}</span>
-                  <button onClick={function(){removeAgent(a.id);}} style={{padding:"5px 12px",borderRadius:6,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:12,cursor:"pointer",fontWeight:600}}>Remove</button>
+                <div key={a.id} style={{background:T.cardBg,border:"1px solid "+T.border,borderRadius:12,padding:"14px 16px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+                    <span style={{flex:1,fontSize:14,fontWeight:700,color:T.text}}>{a.name}</span>
+                    <span style={{fontSize:12,color:T.muted}}>{a.role}</span>
+                    <button onClick={function(){removeAgent(a.id);}} style={{padding:"5px 12px",borderRadius:6,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:12,cursor:"pointer",fontWeight:600}}>Remove</button>
+                  </div>
+                  <div style={{fontSize:10,letterSpacing:2,color:T.muted,fontWeight:700,marginBottom:8}}>BADGES</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    {BADGES.map(function(b){
+                      var autoEarned = b.condition(agentStats, agentPts, getTodayPoints(a.id), getWeeklyHospital(a.id));
+                      var manualOn   = agentManual.indexOf(b.id) !== -1;
+                      var active     = autoEarned || manualOn;
+                      return (
+                        <button key={b.id} onClick={function(){ if(!autoEarned) toggleManualBadge(a.id, b.id); }}
+                          title={autoEarned?"Auto-earned (cannot remove)":manualOn?"Click to remove":"Click to award"}
+                          style={{
+                            display:"inline-flex",alignItems:"center",gap:6,padding:"5px 10px",borderRadius:20,
+                            border:"1px solid "+(active?(autoEarned?"#f59e0b99":"#34d39999"):T.border),
+                            background:active?(autoEarned?"#f59e0b18":"#34d39918"):"transparent",
+                            color:active?(autoEarned?"#fbbf24":"#34d399"):T.muted,
+                            fontSize:12,fontWeight:700,cursor:autoEarned?"default":"pointer",
+                            opacity:active?1:0.5,
+                          }}>
+                          <span>{b.icon}</span>
+                          <span>{b.label}</span>
+                          {manualOn && !autoEarned && <span style={{fontSize:10,color:"#34d399"}}>★</span>}
+                          {autoEarned && <span style={{fontSize:10,color:"#f59e0b"}}>✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
           </div>
+
+          {/* Add agent */}
           <div style={{display:"flex",gap:10,marginBottom:16}}>
             <input value={newName} onChange={function(e){setNewName(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter") addAgent();}}
               placeholder="New agent name..." style={{flex:1,padding:"10px 14px",borderRadius:8,border:"1px solid "+T.border,background:T.cardBg,color:T.text,fontSize:14,outline:"none"}}/>
