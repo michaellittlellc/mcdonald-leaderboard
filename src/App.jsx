@@ -205,12 +205,12 @@ const getWeeklyVerse = () => {
   const weekNum = Math.floor((now - startOfYear) / (7 * 24 * 60 * 60 * 1000));
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 };
-  { id:"first_sale",    label:"First Sale",   icon:"🎯", condition:(s,pts,tdp) => s.own_sale >= 1 },
-  { id:"ten_transfers", label:"10 Transfers", icon:"⚡", condition:(s,pts,tdp) => s.transfer >= 10 },
-  { id:"hat_trick",     label:"Hat Trick",    icon:"🎩", condition:(s,pts,tdp) => s.own_sale >= 3 },
-  { id:"closer",        label:"Closer",       icon:"🔒", condition:(s,pts,tdp) => (s.sold_transfer+s.closed_transfer) >= 5 },
-  { id:"mvp",           label:"25 Points",    icon:"👑", condition:(s,pts,tdp) => pts >= 25 },
-  { id:"on_fire",       label:"On Fire",      icon:"🔥", condition:(s,pts,tdp) => pts >= 15 || tdp >= 6 },
+  { id:"first_sale",    label:"First Sale",   icon:"[*]", condition:(s,pts,tdp) => s.own_sale >= 1 },
+  { id:"ten_transfers", label:"10 Transfers", icon:"[~]", condition:(s,pts,tdp) => s.transfer >= 10 },
+  { id:"hat_trick",     label:"Hat Trick",    icon:"[^]", condition:(s,pts,tdp) => s.own_sale >= 3 },
+  { id:"closer",        label:"Closer",       icon:"[+]", condition:(s,pts,tdp) => (s.sold_transfer+s.closed_transfer) >= 5 },
+  { id:"mvp",           label:"25 Points",    icon:"[$]", condition:(s,pts,tdp) => pts >= 25 },
+  { id:"on_fire",       label:"On Fire",      icon:"[!]", condition:(s,pts,tdp) => pts >= 15 || tdp >= 6 },
 ];
 
 const calcPoints = s => s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3;
