@@ -185,13 +185,25 @@ function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
   var diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  var monday = new Date(now.setDate(diff));
+  var monday = new Date(new Date(now).setDate(diff));
   monday.setHours(0,0,0,0);
   return actLog.filter(function(e) {
     var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
     return e.agentId === agentId &&
       (e.type === "own_sale" || e.type === "sold_transfer" || e.type === "closed_transfer") &&
       t >= monday;
+  }).length;
+}
+
+function calcWeeklyHospital(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "hospital_sale" && t >= monday;
   }).length;
 }
 
@@ -232,7 +244,6 @@ function Confetti({ active, tvTheme }) {
   if (isIce) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
-        /* Icebergs rising from bottom */
         Array.from({length:8}).map(function(_,i) {
           var left = Math.random()*85;
           var delay = Math.random()*3;
@@ -243,7 +254,6 @@ function Confetti({ active, tvTheme }) {
             fontSize:sz, animation:"iceRise "+dur+"s "+delay+"s ease-out forwards", opacity:0,
           }}, "\uD83C\uDFD4\uFE0F");
         }),
-        /* Snowflakes falling */
         Array.from({length:40}).map(function(_,i) {
           var left = Math.random()*100;
           var delay = Math.random()*4;
@@ -255,7 +265,6 @@ function Confetti({ active, tvTheme }) {
             fontSize:sz, animation:"snowFall "+dur+"s "+delay+"s linear forwards", opacity:0,
           }}, flakes[i%flakes.length]);
         }),
-        /* Ice crystals shooting from sides */
         Array.from({length:6}).map(function(_,i) {
           var top = 10+Math.random()*80;
           var delay = Math.random()*3;
@@ -268,7 +277,6 @@ function Confetti({ active, tvTheme }) {
             animation:"crystalSlide"+(fromLeft?"L":"R")+" "+dur+"s "+delay+"s ease-out forwards", opacity:0,
           }}, "\uD83E\uDDCA");
         }),
-        /* Frozen water drops */
         Array.from({length:20}).map(function(_,i) {
           var left = Math.random()*100;
           var delay = Math.random()*5;
@@ -292,21 +300,17 @@ function Confetti({ active, tvTheme }) {
   if (isGameday) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
-        /* Field goal posts */
         React.createElement("div", { style:{position:"absolute",left:"50%",top:"5%",transform:"translateX(-50%)",fontSize:"clamp(60px,12vw,140px)",animation:"goalPost 1s 0.2s ease-out forwards",opacity:0} }, "\uD83C\uDFDF\uFE0F"),
-        /* Football flying through the uprights */
         React.createElement("div", { style:{position:"absolute",left:"20%",bottom:"20%",fontSize:"clamp(40px,7vw,90px)",animation:"footballKick 2s 0.5s cubic-bezier(.2,.8,.4,1) forwards",opacity:0} }, "\uD83C\uDFC8"),
-        /* Confetti in team colors */
         Array.from({length:60}).map(function(_,i) {
           var left = Math.random()*100;
           var delay = 0.8+Math.random()*2;
           var dur = 2+Math.random()*2;
-          var colors = ["#1d4ed8","#dc2626","#ffffff","#fbbf24","#1d4ed8","#dc2626"];
-          var color = colors[i%colors.length];
+          var cols = ["#1d4ed8","#dc2626","#ffffff","#fbbf24","#1d4ed8","#dc2626"];
+          var color = cols[i%cols.length];
           var sz = 8+Math.random()*12;
           return React.createElement("div", { key:i, style:{position:"absolute",left:left+"%",top:"-20px",width:sz,height:sz,background:color,borderRadius:Math.random()>0.5?"50%":"2px",animation:"fall "+dur+"s "+delay+"s linear forwards"} });
         }),
-        /* Large emotes floating across screen */
         Array.from({length:12}).map(function(_,i) {
           var emotes = ["\uD83C\uDFC8","\uD83C\uDFC6","\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDD25","\uD83C\uDFC8","\uD83D\uDC4F","\uD83C\uDF89"];
           var emote = emotes[i%emotes.length];
@@ -316,12 +320,10 @@ function Confetti({ active, tvTheme }) {
           var sz = 60+Math.random()*80;
           var fromRight = i%2===0;
           return React.createElement("div", { key:"emote"+i, style:{
-            position:"absolute",
-            top:top+"%",
-            left:fromRight?"-120px":undefined,
-            right:fromRight?undefined:"-120px",
+            position:"absolute", top:top+"%",
+            left:fromRight?"-120px":undefined, right:fromRight?undefined:"-120px",
             fontSize:sz,
-            animation:"emoteFloat"+( fromRight?"L":"R")+" "+dur+"s "+delay+"s ease-in-out forwards",
+            animation:"emoteFloat"+(fromRight?"L":"R")+" "+dur+"s "+delay+"s ease-in-out forwards",
             opacity:0,
           }}, emote);
         }),
@@ -337,14 +339,13 @@ function Confetti({ active, tvTheme }) {
   if (isInferno) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
-        /* Lava blobs rising from bottom */
         Array.from({length:12}).map(function(_,i) {
           var left = Math.random()*90;
           var delay = Math.random()*3;
           var dur = 3+Math.random()*3;
           var sz = 60+Math.random()*100;
-          var colors = ["#ef4444","#f97316","#dc2626","#b45309","#fb923c"];
-          var color = colors[i%colors.length];
+          var cols = ["#ef4444","#f97316","#dc2626","#b45309","#fb923c"];
+          var color = cols[i%cols.length];
           return React.createElement("div", { key:"lava"+i, style:{
             position:"absolute", left:left+"%", bottom:"-120px",
             width:sz, height:sz*1.3,
@@ -355,7 +356,6 @@ function Confetti({ active, tvTheme }) {
             opacity:0.9,
           } });
         }),
-        /* Fire sparks */
         Array.from({length:30}).map(function(_,i) {
           var left = Math.random()*100;
           var delay = Math.random()*2;
@@ -369,7 +369,6 @@ function Confetti({ active, tvTheme }) {
             animation:"sparkRise "+dur+"s "+delay+"s ease-out forwards",
           } });
         }),
-        /* Fire emojis */
         Array.from({length:15}).map(function(_,i) {
           var left = Math.random()*100;
           var delay = Math.random()*4;
@@ -387,6 +386,7 @@ function Confetti({ active, tvTheme }) {
       )
     );
   }
+
   if (isGalaxy) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
@@ -409,6 +409,7 @@ function Confetti({ active, tvTheme }) {
       )
     );
   }
+
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
       Array.from({length:80}).map(function(_,i) {
@@ -430,7 +431,6 @@ function CelebrationBanner({ celebration, tvTheme }) {
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"} },
       React.createElement("div", { style:{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"} },
-
         React.createElement("div", { style:{fontSize:"clamp(28px,6vw,80px)",fontWeight:900,color:"#fbbf24",letterSpacing:4,marginBottom:16,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"} }, msg),
         React.createElement("div", { style:{fontSize:"clamp(52px,13vw,160px)",fontWeight:900,color:"#ffffff",letterSpacing:2,textShadow:"0 0 80px #60a5fa,0 0 160px #3b82f688",fontFamily:"'Trebuchet MS',sans-serif",lineHeight:1.1} }, celebration.name),
         React.createElement("div", { style:{fontSize:"clamp(18px,3vw,40px)",color:"#94a3b8",marginTop:14,letterSpacing:3,fontFamily:"'Trebuchet MS',sans-serif"} }, "McDONALD GROUP")
@@ -658,7 +658,7 @@ export default function App() {
       time:serverTimestamp(), agentId:agentId, agentName:agent&&agent.name, type:type, by:currentUser.name
     });
     var shouldCelebrate = type==="sold_transfer" || type==="own_sale" || type==="hospital_sale";
-    var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp,getWeeklyHospital(agentId)) && !b.condition(prev,prevPts,prevTdp,getWeeklyHospital(agentId)-1); });
+    var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp,getWeeklyHospital(agentId)) && !b.condition(prev,prevPts,prevTdp,getWeeklyHospital(agentId)); });
     if(shouldCelebrate || milestone){
       var celebType = shouldCelebrate ? type : "badge";
       await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent&&agent.name, type:celebType, badgeId:milestone?milestone.id:null, time:Date.now() });
@@ -674,7 +674,6 @@ export default function App() {
     newStats[agentId] = newStat;
     setStats(newStats);
     await saveSettings({ stats: newStats });
-    // Remove most recent matching entry from activity log
     try {
       var match = actLog.find(function(e){ return e.agentId === agentId && e.type === type; });
       if(match && match.id) {
@@ -828,7 +827,7 @@ export default function App() {
                       })}
                     </div>
                     <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden",marginBottom:5}}>
-                      <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")"  :"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
+                      <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
                     </div>
                     <div style={{fontSize:"clamp(11px,1.1vw,14px)",color:TV.muted,fontWeight:600}}>
                       {calcWeeklyApps(actLog,agent.id)} apps this week
@@ -970,7 +969,7 @@ export default function App() {
               var pct=maxPts>0?(agent.points/maxPts)*100:0;
               var tc=TROPHY_COLORS[theme][idx];
               var isTop3=idx<3;
-              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id)); });
+              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id),getWeeklyHospital(agent.id)); });
               var rowStyle = {
                 display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",transition:"all .3s",
                 background:isTop3?tc.bg:T.cardBg,
@@ -1000,14 +999,14 @@ export default function App() {
                       })}
                     </div>
                     <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:6}}>
-                      <div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")"  :"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
+                      <div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
                     </div>
                     <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
                       <span style={{fontSize:11,color:"#60a5fa"}}>{agent.stats.transfer} transfers</span>
                       <span style={{fontSize:11,color:"#a78bfa"}}>{agent.stats.sold_transfer} s&c</span>
                       <span style={{fontSize:11,color:"#f59e0b"}}>{agent.stats.closed_transfer} r&c</span>
                       <span style={{fontSize:11,color:"#34d399"}}>{agent.stats.own_sale} own</span>
-                      {agent.stats.hospital_sale > 0 && <span style={{fontSize:11,color:"#ec4899"}}>{agent.stats.hospital_sale} hosp</span>}
+                      {(agent.stats.hospital_sale||0) > 0 && <span style={{fontSize:11,color:"#ec4899"}}>{agent.stats.hospital_sale} hosp</span>}
                       <span style={{fontSize:11,color:"#34d399",fontWeight:700,background:"#34d39922",padding:"1px 6px",borderRadius:8}}>
                         {calcWeeklyApps(actLog,agent.id)} apps this week
                       </span>
@@ -1054,6 +1053,7 @@ export default function App() {
                     <span>{agent.stats.sold_transfer} s&c</span>
                     <span>{agent.stats.closed_transfer} r&c</span>
                     <span>{agent.stats.own_sale} own</span>
+                    {(agent.stats.hospital_sale||0) > 0 && <span>{agent.stats.hospital_sale} hosp</span>}
                   </div>
                 </div>
               );
@@ -1106,7 +1106,7 @@ export default function App() {
                       {actTypes.map(function(at){
                         return (
                           <div key={at.type} style={{fontSize:11,padding:"3px 8px",borderRadius:10,background:at.color+"22",color:at.color,fontWeight:700}}>
-                            {at.label.split(" ")[0]}: {agent.stats[at.type]}
+                            {at.label.split(" ")[0]}: {agent.stats[at.type]||0}
                           </div>
                         );
                       })}
@@ -1197,8 +1197,10 @@ export default function App() {
               placeholder="New agent name..." style={{flex:1,padding:"10px 14px",borderRadius:8,border:"1px solid "+T.border,background:T.cardBg,color:T.text,fontSize:14,outline:"none"}}/>
             <button onClick={addAgent} style={{padding:"10px 20px",borderRadius:8,border:"none",background:"#2563eb",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Add Agent</button>
           </div>
-          <button onClick={resetAll} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer"}}>Reset All Points</button>
-          <button onClick={resetActivityLog} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer",marginTop:8}}>Clear Activity Log</button>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            <button onClick={resetAll} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer"}}>Reset All Points</button>
+            <button onClick={resetActivityLog} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer"}}>Clear Activity Log</button>
+          </div>
         </div>
       )}
     </div>
