@@ -192,8 +192,8 @@ function calcWeeklyApps(actLog, agentId) {
       t >= monday;
   }).length;
 }
-function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
-function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
+
+
 
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
