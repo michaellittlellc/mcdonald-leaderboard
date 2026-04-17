@@ -97,12 +97,12 @@ const TV_THEMES = {
 };
 
 const BADGE_ICONS = {
-  first_sale: "(1st)",
-  ten_transfers: "(10x)",
-  hat_trick: "(3x)",
-  closer: "(CLR)",
-  mvp: "(MVP)",
-  on_fire: "(HOT)",
+  first_sale: "\uD83C\uDFAF",
+  ten_transfers: "\u26A1",
+  hat_trick: "\uD83C\uDFA9",
+  closer: "\uD83D\uDD12",
+  mvp: "\uD83D\uDC51",
+  on_fire: "\uD83D\uDD25",
 };
 
 const BADGES = [
@@ -590,9 +590,9 @@ export default function App() {
 
           {/* Bible Verse */}
           <div style={{textAlign:"center",marginBottom:12,padding:"10px 24px",background:TV.card,border:"1px solid "+TV.border,borderRadius:14,opacity:0.9}}>
-            <div style={{fontSize:"clamp(11px,1.2vw,14px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:4}}>VERSE OF THE WEEK</div>
-            <div style={{fontSize:"clamp(12px,1.4vw,17px)",color:TV.text,fontStyle:"italic",lineHeight:1.5,maxWidth:900,margin:"0 auto"}}>"{weeklyVerse.text}"</div>
-            <div style={{fontSize:"clamp(10px,1.1vw,13px)",color:TV.muted,fontWeight:700,marginTop:4,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
+            <div style={{fontSize:"clamp(13px,1.4vw,16px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:6}}>VERSE OF THE WEEK</div>
+            <div style={{fontSize:"clamp(16px,2vw,26px)",color:TV.text,fontStyle:"italic",lineHeight:1.6,maxWidth:1000,margin:"0 auto"}}>"{weeklyVerse.text}"</div>
+            <div style={{fontSize:"clamp(13px,1.4vw,18px)",color:TV.muted,fontWeight:700,marginTop:6,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
           </div>
 
           {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
