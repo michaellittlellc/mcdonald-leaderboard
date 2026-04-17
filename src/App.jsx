@@ -192,8 +192,8 @@ function calcWeeklyApps(actLog, agentId) {
       t >= monday;
   }).length;
 }
-
-
+function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
+function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
 
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
@@ -588,6 +588,7 @@ export default function App() {
   }
 
   function playSound() {
+    if (!tvMode) return;
     try {
       var audio = new Audio("/champagneglass.mp3");
       audio.volume = 1.0;
@@ -600,7 +601,7 @@ export default function App() {
       if(snap.exists() && snap.data().active){
         var d = snap.data();
         setConfetti(true); playSound();
-        setCelebration({ name:d.by, type:d.type });
+        setCelebration({ name:d.by, type:d.type, badgeId:d.badgeId||null });
         setTimeout(function(){ setConfetti(false); setCelebration(null); }, 10000);
       }
     });
@@ -656,7 +657,7 @@ export default function App() {
     var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp) && !b.condition(prev,prevPts,prevTdp); });
     if(shouldCelebrate || milestone){
       var celebType = shouldCelebrate ? type : "badge";
-      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent&&agent.name, type:celebType, time:Date.now() });
+      await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent&&agent.name, type:celebType, badgeId:milestone?milestone.id:null, time:Date.now() });
       setTimeout(async function(){ await setDoc(doc(db,"settings","celebrate"),{ active:false }); }, 11000);
     }
   }
