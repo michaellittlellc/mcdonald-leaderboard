@@ -229,12 +229,28 @@ function Confetti({ active, tvTheme }) {
           var sz = 8+Math.random()*12;
           return React.createElement("div", { key:i, style:{position:"absolute",left:left+"%",top:"-20px",width:sz,height:sz,background:color,borderRadius:Math.random()>0.5?"50%":"2px",animation:"fall "+dur+"s "+delay+"s linear forwards"} });
         }),
-        /* Celebration text */
-        React.createElement("div", { style:{position:"absolute",top:"45%",left:"50%",transform:"translate(-50%,-50%)",fontSize:"clamp(28px,5vw,72px)",fontWeight:900,color:"#fbbf24",textShadow:"0 0 40px #f59e0b,0 0 80px #b45309",letterSpacing:4,animation:"goalText 0.6s 1.5s ease-out forwards",opacity:0,whiteSpace:"nowrap"} }, "IT'S GOOD!"),
+        /* Large emotes floating across screen */
+        Array.from({length:12}).map(function(_,i) {
+          var emotes = ["\uD83C\uDFC8","\uD83C\uDFC6","\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDD25","\uD83C\uDFC8","\uD83D\uDC4F","\uD83C\uDF89"];
+          var emote = emotes[i%emotes.length];
+          var top = 10+Math.random()*70;
+          var delay = Math.random()*4;
+          var dur = 3+Math.random()*3;
+          var sz = 60+Math.random()*80;
+          var fromRight = i%2===0;
+          return React.createElement("div", { key:"emote"+i, style:{
+            position:"absolute",
+            top:top+"%",
+            left:fromRight?"-120px":undefined,
+            right:fromRight?undefined:"-120px",
+            fontSize:sz,
+            animation:"emoteFloat"+( fromRight?"L":"R")+" "+dur+"s "+delay+"s ease-in-out forwards",
+            opacity:0,
+          }}, emote);
+        }),
         React.createElement("style", null,
           "@keyframes goalPost{0%{transform:translateX(-50%) scale(0.3);opacity:0}60%{transform:translateX(-50%) scale(1.2);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}" +
           "@keyframes footballKick{0%{transform:rotate(0deg) translate(0,0);opacity:1}40%{transform:rotate(-30deg) translate(80px,-40px);opacity:1}100%{transform:rotate(-45deg) translate(250px,-300px) scale(0.4);opacity:0}}" +
-          "@keyframes goalText{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}60%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}" +
           "@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}"
         )
       )
@@ -498,46 +514,16 @@ export default function App() {
     try {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (tvTheme === "gameday") {
-        /* Deep crowd roar - low frequency human voices */
-        var roarFreqs = [80,120,160,200,240,280,180,140,100,220,260,90];
-        for (var r = 0; r < 12; r++) {
-          (function(ri) {
-            var buf = ctx.createBuffer(1, ctx.sampleRate * 6, ctx.sampleRate);
-            var data = buf.getChannelData(0);
-            for (var s = 0; s < data.length; s++) {
-              /* Pink noise for more natural human crowd sound */
-              data[s] = (Math.random()*2-1) * 0.8 * Math.min(1, s/(ctx.sampleRate*0.2)) * Math.max(0, 1-s/(ctx.sampleRate*5.5));
-            }
-            var src = ctx.createBufferSource();
-            var gain = ctx.createGain();
-            var lowpass = ctx.createBiquadFilter();
-            var bandpass = ctx.createBiquadFilter();
-            lowpass.type = "lowpass";
-            lowpass.frequency.value = 800;
-            bandpass.type = "bandpass";
-            bandpass.frequency.value = roarFreqs[ri] || 150;
-            bandpass.Q.value = 0.5;
-            src.buffer = buf;
-            src.connect(bandpass);
-            bandpass.connect(lowpass);
-            lowpass.connect(gain);
-            gain.connect(ctx.destination);
-            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.04);
-            gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + ri*0.04 + 0.5);
-            gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + ri*0.04 + 3.5);
-            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.04 + 6.5);
-            src.start(ctx.currentTime + ri*0.04);
-          })(r);
-        }
-        /* Referee whistle */
-        [2200,2500,2800,2500,2200,2500].forEach(function(freq,i) {
-          var osc=ctx.createOscillator(), gain=ctx.createGain();
+        /* 3 second referee whistle */
+        [2600, 2600, 2600].forEach(function(freq, i) {
+          var osc = ctx.createOscillator(), gain = ctx.createGain();
           osc.connect(gain); gain.connect(ctx.destination);
-          osc.frequency.value=freq; osc.type="sine";
-          gain.gain.setValueAtTime(0.5, ctx.currentTime+i*0.2);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.2+0.3);
-          osc.start(ctx.currentTime+i*0.2);
-          osc.stop(ctx.currentTime+i*0.2+0.3);
+          osc.frequency.value = freq; osc.type = "sine";
+          gain.gain.setValueAtTime(0.6, ctx.currentTime + i * 1.1);
+          gain.gain.setValueAtTime(0.6, ctx.currentTime + i * 1.1 + 0.85);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 1.1 + 1.0);
+          osc.start(ctx.currentTime + i * 1.1);
+          osc.stop(ctx.currentTime + i * 1.1 + 1.0);
         });
       } else {
         [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
