@@ -212,19 +212,22 @@ function Confetti({ active, tvTheme }) {
   if (isGalaxy) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
-        Array.from({length:40}).map(function(_,i) {
+        Array.from({length:50}).map(function(_,i) {
           var left = Math.random()*100;
-          var delay = Math.random()*2;
-          var dur = 1.5+Math.random()*2;
-          return React.createElement("div", { key:i, style:{position:"absolute",left:left+"%",top:"-20px",fontSize:20+Math.random()*16,animation:"starFall "+dur+"s "+delay+"s linear forwards"} }, "");
-        }),
-        Array.from({length:6}).map(function(_,i) {
-          var left = 5+Math.random()*90;
           var delay = Math.random()*3;
-          var dur = 2+Math.random()*2;
-          return React.createElement("div", { key:"r"+i, style:{position:"absolute",left:left+"%",bottom:"-60px",fontSize:28+Math.random()*20,animation:"rocketLaunch "+dur+"s "+delay+"s ease-in forwards"} }, "^");
+          var dur = 2+Math.random()*3;
+          var sz = 16+Math.random()*20;
+          var stars = ["\u2B50","\u2728","\u2B50","\u2B50","\u2728"];
+          return React.createElement("div", { key:i, style:{position:"absolute",left:left+"%",top:"-40px",fontSize:sz,animation:"starFall "+dur+"s "+delay+"s linear forwards"} }, stars[i%stars.length]);
         }),
-        React.createElement("style", null, "@keyframes starFall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(110vh) rotate(360deg) scale(0.5);opacity:0}} @keyframes rocketLaunch{0%{transform:translateY(0) rotate(-45deg);opacity:1}100%{transform:translateY(-110vh) rotate(-45deg);opacity:0}}")
+        Array.from({length:8}).map(function(_,i) {
+          var left = 5+Math.random()*90;
+          var delay = Math.random()*4;
+          var dur = 2.5+Math.random()*2;
+          var sz = 32+Math.random()*24;
+          return React.createElement("div", { key:"r"+i, style:{position:"absolute",left:left+"%",bottom:"-80px",fontSize:sz,animation:"rocketLaunch "+dur+"s "+delay+"s ease-in forwards"} }, "\uD83D\uDE80");
+        }),
+        React.createElement("style", null, "@keyframes starFall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(110vh) rotate(360deg) scale(0.3);opacity:0}} @keyframes rocketLaunch{0%{transform:translateY(0) rotate(-45deg) scale(1);opacity:1}100%{transform:translateY(-110vh) rotate(-45deg) scale(1.5);opacity:0}}")
       )
     );
   }
@@ -408,14 +411,14 @@ export default function App() {
   function playSound() {
     try {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [523,659,784,1047].forEach(function(freq,i) {
+      [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
         var osc=ctx.createOscillator(), gain=ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
         osc.frequency.value=freq; osc.type="sine";
-        gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.12+0.3);
-        osc.start(ctx.currentTime+i*0.12);
-        osc.stop(ctx.currentTime+i*0.12+0.3);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.4);
+        osc.start(ctx.currentTime+i*0.18);
+        osc.stop(ctx.currentTime+i*0.18+0.4);
       });
     } catch(e) {}
   }
