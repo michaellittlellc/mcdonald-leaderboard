@@ -136,9 +136,38 @@ function Trophy({ rank, size=48, colors }) {
 }
 
 // ── Confetti ──────────────────────────────────────────────────
-function Confetti({ active }) {
+function Confetti({ active, tvTheme }) {
   const colors = ["#f59e0b","#60a5fa","#34d399","#f472b6","#a78bfa","#fb923c"];
+  const isGalaxy = tvTheme === "galaxy";
   if (!active) return null;
+
+  if (isGalaxy) {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
+        {/* Stars */}
+        {Array.from({length:60}).map((_,i) => {
+          const left=Math.random()*100, delay=Math.random()*2, dur=1.5+Math.random()*2;
+          const sz=4+Math.random()*8, colors=["#e9d5ff","#818cf8","#6ee7b7","#fbbf24","#ffffff"];
+          const color=colors[i%colors.length];
+          return (
+            <div key={i} style={{position:"absolute",left:`${left}%`,top:"-20px",fontSize:sz+8,animation:`starFall ${dur}s ${delay}s linear forwards`}}>⭐</div>
+          );
+        })}
+        {/* Rockets */}
+        {Array.from({length:8}).map((_,i) => {
+          const left=5+Math.random()*90, delay=Math.random()*3, dur=2+Math.random()*2;
+          return (
+            <div key={`r${i}`} style={{position:"absolute",left:`${left}%`,bottom:"-60px",fontSize:28+Math.random()*20,animation:`rocketLaunch ${dur}s ${delay}s ease-in forwards`}}>🚀</div>
+          );
+        })}
+        <style>{`
+          @keyframes starFall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(110vh) rotate(360deg) scale(0.5);opacity:0}}
+          @keyframes rocketLaunch{0%{transform:translateY(0) rotate(-45deg);opacity:1}100%{transform:translateY(-110vh) rotate(-45deg);opacity:0}}
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
       {Array.from({length:80}).map((_,i) => {
@@ -461,7 +490,7 @@ export default function App() {
 
   return (
     <div style={{...S.root,background:T.bg,color:T.text}}>
-      <Confetti active={confetti}/>
+      <Confetti active={confetti} tvTheme={tvTheme}/>
       <CelebrationBanner celebration={celebration}/>
       {showPwModal && <ChangePwModal user={currentUser} onClose={()=>setShowPwModal(false)}/>}
 
