@@ -735,7 +735,7 @@ export default function App() {
   function typeColor(t) { var f=actTypes.find(function(a){ return a.type===t; }); return f?f.color:"#fff"; }
 
   var entryAgents = isManager ? ranked : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
-  var navItems    = ["board","entry","stats"].concat(isManager?["feed","manage"]:[]);
+  var navItems = ["board","entry","stats","alltime"].concat(isManager?["feed","manage"]:[]);
   var myData      = ranked.find(function(a){ return a.id===(currentUser&&currentUser.id); });
   var myRank      = myData ? ranked.indexOf(myData)+1 : null;
   var weeklyVerse = getWeeklyVerse();
