@@ -175,7 +175,19 @@ function getWeeklyVerse() {
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 }
 
-function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3; }
+function calcWeeklyApps(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(now.setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId &&
+      (e.type === "own_sale" || e.type === "sold_transfer" || e.type === "closed_transfer") &&
+      t >= monday;
+  }).length;
+}
 function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
 function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
 
@@ -788,8 +800,11 @@ export default function App() {
                         return <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,padding:"2px 8px",borderRadius:20,background:TV.card,border:"1px solid #f59e0b66",color:"#fbbf24"}}>{b.icon} {b.label}</span>;
                       })}
                     </div>
-                    <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden"}}>
+                    <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden",marginBottom:5}}>
                       <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")"  :"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
+                    </div>
+                    <div style={{fontSize:"clamp(11px,1.1vw,14px)",color:TV.muted,fontWeight:600}}>
+                      {calcWeeklyApps(actLog,agent.id)} apps this week
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
@@ -966,6 +981,9 @@ export default function App() {
                       <span style={{fontSize:11,color:"#f59e0b"}}>{agent.stats.closed_transfer} r&c</span>
                       <span style={{fontSize:11,color:"#34d399"}}>{agent.stats.own_sale} own</span>
                       <span style={{fontSize:11,color:"#f59e0b",fontWeight:700}}>{agent.apps} apps</span>
+                      <span style={{fontSize:11,color:"#34d399",fontWeight:700,background:"#34d39922",padding:"1px 6px",borderRadius:8}}>
+                        {calcWeeklyApps(actLog,agent.id)} apps this week
+                      </span>
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
