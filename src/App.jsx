@@ -208,7 +208,62 @@ function Trophy({ rank, size, colors }) {
 function Confetti({ active, tvTheme }) {
   var colors = ["#f59e0b","#60a5fa","#34d399","#f472b6","#a78bfa","#fb923c"];
   var isGalaxy = tvTheme === "galaxy";
+  var isInferno = tvTheme === "inferno";
   if (!active) return null;
+
+  if (isInferno) {
+    return (
+      React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
+        /* Lava blobs rising from bottom */
+        Array.from({length:12}).map(function(_,i) {
+          var left = Math.random()*90;
+          var delay = Math.random()*3;
+          var dur = 3+Math.random()*3;
+          var sz = 60+Math.random()*100;
+          var colors = ["#ef4444","#f97316","#dc2626","#b45309","#fb923c"];
+          var color = colors[i%colors.length];
+          return React.createElement("div", { key:"lava"+i, style:{
+            position:"absolute", left:left+"%", bottom:"-120px",
+            width:sz, height:sz*1.3,
+            background:"radial-gradient(ellipse at 40% 30%, "+color+"dd, #7c1d00)",
+            borderRadius:"50% 50% 40% 40%",
+            boxShadow:"0 0 30px "+color+"88, 0 0 60px "+color+"44",
+            animation:"lavaRise "+dur+"s "+delay+"s ease-in forwards",
+            opacity:0.9,
+          } });
+        }),
+        /* Fire sparks */
+        Array.from({length:30}).map(function(_,i) {
+          var left = Math.random()*100;
+          var delay = Math.random()*2;
+          var dur = 1+Math.random()*2;
+          var sz = 8+Math.random()*16;
+          return React.createElement("div", { key:"spark"+i, style:{
+            position:"absolute", left:left+"%", bottom:"-20px",
+            width:sz, height:sz*2,
+            background:"linear-gradient(to top, #f97316, #fbbf24, transparent)",
+            borderRadius:"50% 50% 20% 20%",
+            animation:"sparkRise "+dur+"s "+delay+"s ease-out forwards",
+          } });
+        }),
+        /* Fire emojis */
+        Array.from({length:15}).map(function(_,i) {
+          var left = Math.random()*100;
+          var delay = Math.random()*4;
+          var dur = 2+Math.random()*2;
+          return React.createElement("div", { key:"fire"+i, style:{
+            position:"absolute", left:left+"%", bottom:"-40px",
+            fontSize:24+Math.random()*24,
+            animation:"sparkRise "+dur+"s "+delay+"s ease-out forwards",
+          } }, "\uD83D\uDD25");
+        }),
+        React.createElement("style", null,
+          "@keyframes lavaRise{0%{transform:translateY(0) scale(1) rotate(0deg);opacity:0.9}50%{transform:translateY(-50vh) scale(1.3) rotate(10deg);opacity:1}100%{transform:translateY(-120vh) scale(0.8) rotate(-5deg);opacity:0}}" +
+          "@keyframes sparkRise{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-110vh) scale(0.3);opacity:0}}"
+        )
+      )
+    );
+  }
   if (isGalaxy) {
     return (
       React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
