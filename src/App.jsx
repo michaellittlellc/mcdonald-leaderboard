@@ -103,15 +103,17 @@ const BADGE_ICONS = {
   closer: "\uD83D\uDD12",
   mvp: "\uD83D\uDC51",
   on_fire: "\uD83D\uDD25",
+  doctor: "\uD83D\uDC68\u200D\u2695\uFE0F",
 };
 
 const BADGES = [
-  { id:"first_sale",    label:"First Sale",   icon:BADGE_ICONS.first_sale,    condition: function(s,pts,tdp){ return s.own_sale >= 1; } },
-  { id:"ten_transfers", label:"10 Transfers", icon:BADGE_ICONS.ten_transfers, condition: function(s,pts,tdp){ return s.transfer >= 10; } },
-  { id:"hat_trick",     label:"Hat Trick",    icon:BADGE_ICONS.hat_trick,     condition: function(s,pts,tdp){ return s.own_sale >= 3; } },
-  { id:"closer",        label:"Closer",       icon:BADGE_ICONS.closer,        condition: function(s,pts,tdp){ return (s.sold_transfer+s.closed_transfer) >= 5; } },
-  { id:"mvp",           label:"25 Points",    icon:BADGE_ICONS.mvp,           condition: function(s,pts,tdp){ return pts >= 25; } },
-  { id:"on_fire",       label:"On Fire",      icon:BADGE_ICONS.on_fire,       condition: function(s,pts,tdp){ return pts >= 15 || tdp >= 6; } },
+  { id:"first_sale",    label:"First Sale",      icon:BADGE_ICONS.first_sale,    condition: function(s,pts,tdp,wk){ return s.own_sale >= 1; } },
+  { id:"ten_transfers", label:"10 Transfers",    icon:BADGE_ICONS.ten_transfers, condition: function(s,pts,tdp,wk){ return s.transfer >= 10; } },
+  { id:"hat_trick",     label:"Hat Trick",       icon:BADGE_ICONS.hat_trick,     condition: function(s,pts,tdp,wk){ return s.own_sale >= 3; } },
+  { id:"closer",        label:"Closer",          icon:BADGE_ICONS.closer,        condition: function(s,pts,tdp,wk){ return (s.sold_transfer+s.closed_transfer) >= 5; } },
+  { id:"mvp",           label:"25 Points",       icon:BADGE_ICONS.mvp,           condition: function(s,pts,tdp,wk){ return pts >= 25; } },
+  { id:"on_fire",       label:"On Fire",         icon:BADGE_ICONS.on_fire,       condition: function(s,pts,tdp,wk){ return pts >= 15 || tdp >= 6; } },
+  { id:"doctor",        label:"Doctor",          icon:BADGE_ICONS.doctor,        condition: function(s,pts,tdp,wk){ return (wk||0) >= 3; } },
 ];
 
 const BIBLE_VERSES = [
@@ -585,6 +587,10 @@ export default function App() {
       .reduce(function(sum,e){ return sum+(POINT_VALUES[e.type]||0); }, 0);
   }
 
+  function getWeeklyHospital(agentId) {
+    return calcWeeklyHospital(actLog, agentId);
+  }
+
   function playSound() {
     if (!tvMode) return;
     try {
@@ -652,7 +658,7 @@ export default function App() {
       time:serverTimestamp(), agentId:agentId, agentName:agent&&agent.name, type:type, by:currentUser.name
     });
     var shouldCelebrate = type==="sold_transfer" || type==="own_sale" || type==="hospital_sale";
-    var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp) && !b.condition(prev,prevPts,prevTdp); });
+    var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp,getWeeklyHospital(agentId)) && !b.condition(prev,prevPts,prevTdp,getWeeklyHospital(agentId)-1); });
     if(shouldCelebrate || milestone){
       var celebType = shouldCelebrate ? type : "badge";
       await setDoc(doc(db,"settings","celebrate"),{ active:true, by:agent&&agent.name, type:celebType, badgeId:milestone?milestone.id:null, time:Date.now() });
@@ -735,7 +741,7 @@ export default function App() {
   function typeColor(t) { var f=actTypes.find(function(a){ return a.type===t; }); return f?f.color:"#fff"; }
 
   var entryAgents = isManager ? ranked : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
-  var navItems = ["board","entry","stats","alltime"].concat(isManager?["feed","manage"]:[]);
+  var navItems    = ["board","entry","stats"].concat(isManager?["feed","manage"]:[]);
   var myData      = ranked.find(function(a){ return a.id===(currentUser&&currentUser.id); });
   var myRank      = myData ? ranked.indexOf(myData)+1 : null;
   var weeklyVerse = getWeeklyVerse();
@@ -801,7 +807,7 @@ export default function App() {
               var pct=maxPts>0?(agent.points/maxPts)*100:0;
               var isTop3=idx<3;
               var tc=isTop3?TV.top3[idx]:null;
-              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id)); });
+              var agentBadges=BADGES.filter(function(b){ return b.condition(agent.stats,agent.points,getTodayPoints(agent.id),getWeeklyHospital(agent.id)); });
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"12px 24px",background:isTop3?tc.bg:TV.card,border:isTop3?"1px solid "+tc.border:"1px solid "+TV.border,boxShadow:isTop3?"0 0 24px "+tc.glow:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
@@ -1077,7 +1083,7 @@ export default function App() {
               <div style={{fontSize:14,fontWeight:800,color:T.text,marginBottom:12,letterSpacing:1}}>YOUR BADGES</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                 {BADGES.map(function(b){
-                  var earned=b.condition(myData.stats,myData.points,getTodayPoints(myData.id));
+                  var earned=b.condition(myData.stats,myData.points,getTodayPoints(myData.id),getWeeklyHospital(myData.id));
                   return (
                     <div key={b.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",borderRadius:20,background:T.cardBg,border:"1px solid "+(earned?"#f59e0b66":T.border),opacity:earned?1:0.35}}>
                       <span style={{fontSize:16}}>{b.icon}</span>
