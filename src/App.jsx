@@ -209,7 +209,37 @@ function Confetti({ active, tvTheme }) {
   var colors = ["#f59e0b","#60a5fa","#34d399","#f472b6","#a78bfa","#fb923c"];
   var isGalaxy = tvTheme === "galaxy";
   var isInferno = tvTheme === "inferno";
+  var isGameday = tvTheme === "gameday";
   if (!active) return null;
+
+  if (isGameday) {
+    return (
+      React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
+        /* Field goal posts */
+        React.createElement("div", { style:{position:"absolute",left:"50%",top:"5%",transform:"translateX(-50%)",fontSize:"clamp(60px,12vw,140px)",animation:"goalPost 1s 0.2s ease-out forwards",opacity:0} }, "\uD83C\uDFDF\uFE0F"),
+        /* Football flying through the uprights */
+        React.createElement("div", { style:{position:"absolute",left:"20%",bottom:"20%",fontSize:"clamp(40px,7vw,90px)",animation:"footballKick 2s 0.5s cubic-bezier(.2,.8,.4,1) forwards",opacity:0} }, "\uD83C\uDFC8"),
+        /* Confetti in team colors */
+        Array.from({length:60}).map(function(_,i) {
+          var left = Math.random()*100;
+          var delay = 0.8+Math.random()*2;
+          var dur = 2+Math.random()*2;
+          var colors = ["#1d4ed8","#dc2626","#ffffff","#fbbf24","#1d4ed8","#dc2626"];
+          var color = colors[i%colors.length];
+          var sz = 8+Math.random()*12;
+          return React.createElement("div", { key:i, style:{position:"absolute",left:left+"%",top:"-20px",width:sz,height:sz,background:color,borderRadius:Math.random()>0.5?"50%":"2px",animation:"fall "+dur+"s "+delay+"s linear forwards"} });
+        }),
+        /* Celebration text */
+        React.createElement("div", { style:{position:"absolute",top:"45%",left:"50%",transform:"translate(-50%,-50%)",fontSize:"clamp(28px,5vw,72px)",fontWeight:900,color:"#fbbf24",textShadow:"0 0 40px #f59e0b,0 0 80px #b45309",letterSpacing:4,animation:"goalText 0.6s 1.5s ease-out forwards",opacity:0,whiteSpace:"nowrap"} }, "IT'S GOOD!"),
+        React.createElement("style", null,
+          "@keyframes goalPost{0%{transform:translateX(-50%) scale(0.3);opacity:0}60%{transform:translateX(-50%) scale(1.2);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}" +
+          "@keyframes footballKick{0%{transform:rotate(0deg) translate(0,0);opacity:1}40%{transform:rotate(-30deg) translate(80px,-40px);opacity:1}100%{transform:rotate(-45deg) translate(250px,-300px) scale(0.4);opacity:0}}" +
+          "@keyframes goalText{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}60%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}" +
+          "@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}"
+        )
+      )
+    );
+  }
 
   if (isInferno) {
     return (
@@ -466,15 +496,50 @@ export default function App() {
   function playSound() {
     try {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
-        var osc=ctx.createOscillator(), gain=ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value=freq; osc.type="sine";
-        gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.18);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.4);
-        osc.start(ctx.currentTime+i*0.18);
-        osc.stop(ctx.currentTime+i*0.18+0.4);
-      });
+      if (tvTheme === "gameday") {
+        /* Crowd roar — layered noise bursts with rising pitch */
+        for (var r = 0; r < 8; r++) {
+          (function(ri) {
+            var buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+            var data = buf.getChannelData(0);
+            for (var s = 0; s < data.length; s++) {
+              data[s] = (Math.random()*2-1) * Math.min(1, s/(ctx.sampleRate*0.1)) * Math.max(0, 1-s/(ctx.sampleRate*2.5));
+            }
+            var src = ctx.createBufferSource();
+            var gain = ctx.createGain();
+            var filter = ctx.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.frequency.value = 400 + ri * 200;
+            filter.Q.value = 0.8;
+            src.buffer = buf;
+            src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.08);
+            gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + ri*0.08 + 0.3);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.08 + 2.5);
+            src.start(ctx.currentTime + ri*0.08);
+          })(r);
+        }
+        /* Whistle */
+        [2400,2600,2400].forEach(function(freq,i) {
+          var osc=ctx.createOscillator(), gain=ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.value=freq; osc.type="sine";
+          gain.gain.setValueAtTime(0.4, ctx.currentTime+i*0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.15+0.25);
+          osc.start(ctx.currentTime+i*0.15);
+          osc.stop(ctx.currentTime+i*0.15+0.25);
+        });
+      } else {
+        [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
+          var osc=ctx.createOscillator(), gain=ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.value=freq; osc.type="sine";
+          gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.4);
+          osc.start(ctx.currentTime+i*0.18);
+          osc.stop(ctx.currentTime+i*0.18+0.4);
+        });
+      }
     } catch(e) {}
   }
 
