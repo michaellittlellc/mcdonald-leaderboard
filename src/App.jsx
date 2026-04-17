@@ -210,7 +210,68 @@ function Confetti({ active, tvTheme }) {
   var isGalaxy = tvTheme === "galaxy";
   var isInferno = tvTheme === "inferno";
   var isGameday = tvTheme === "gameday";
+  var isIce = tvTheme === "ice";
   if (!active) return null;
+
+  if (isIce) {
+    return (
+      React.createElement("div", { style:{position:"fixed",inset:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"} },
+        /* Icebergs rising from bottom */
+        Array.from({length:8}).map(function(_,i) {
+          var left = Math.random()*85;
+          var delay = Math.random()*3;
+          var dur = 4+Math.random()*3;
+          var sz = 70+Math.random()*120;
+          return React.createElement("div", { key:"berg"+i, style:{
+            position:"absolute", left:left+"%", bottom:"-160px",
+            fontSize:sz, animation:"iceRise "+dur+"s "+delay+"s ease-out forwards", opacity:0,
+          }}, "\uD83C\uDFD4\uFE0F");
+        }),
+        /* Snowflakes falling */
+        Array.from({length:40}).map(function(_,i) {
+          var left = Math.random()*100;
+          var delay = Math.random()*4;
+          var dur = 3+Math.random()*3;
+          var sz = 20+Math.random()*40;
+          var flakes = ["\u2744\uFE0F","\u2745","\u2746","\u2744\uFE0F","\u2C60"];
+          return React.createElement("div", { key:"snow"+i, style:{
+            position:"absolute", left:left+"%", top:"-60px",
+            fontSize:sz, animation:"snowFall "+dur+"s "+delay+"s linear forwards", opacity:0,
+          }}, flakes[i%flakes.length]);
+        }),
+        /* Ice crystals shooting from sides */
+        Array.from({length:6}).map(function(_,i) {
+          var top = 10+Math.random()*80;
+          var delay = Math.random()*3;
+          var dur = 2+Math.random()*2;
+          var fromLeft = i%2===0;
+          return React.createElement("div", { key:"crystal"+i, style:{
+            position:"absolute", top:top+"%",
+            left:fromLeft?"-80px":undefined, right:fromLeft?undefined:"-80px",
+            fontSize:50+Math.random()*40,
+            animation:"crystalSlide"+(fromLeft?"L":"R")+" "+dur+"s "+delay+"s ease-out forwards", opacity:0,
+          }}, "\uD83E\uDDCA");
+        }),
+        /* Frozen water drops */
+        Array.from({length:20}).map(function(_,i) {
+          var left = Math.random()*100;
+          var delay = Math.random()*5;
+          var dur = 2+Math.random()*2;
+          return React.createElement("div", { key:"drop"+i, style:{
+            position:"absolute", top:"-30px", left:left+"%",
+            fontSize:24+Math.random()*20,
+            animation:"snowFall "+dur+"s "+delay+"s linear forwards", opacity:0,
+          }}, "\uD83D\uDCA7");
+        }),
+        React.createElement("style", null,
+          "@keyframes iceRise{0%{transform:translateY(0) scale(0.5);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateY(-110vh) scale(1.3);opacity:0}}" +
+          "@keyframes snowFall{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}" +
+          "@keyframes crystalSlideL{0%{transform:translateX(0) scale(0.3);opacity:0}20%{opacity:1}100%{transform:translateX(110vw) scale(1.2);opacity:0}}" +
+          "@keyframes crystalSlideR{0%{transform:translateX(0) scale(0.3);opacity:0}20%{opacity:1}100%{transform:translateX(-110vw) scale(1.2);opacity:0}}"
+        )
+      )
+    );
+  }
 
   if (isGameday) {
     return (
