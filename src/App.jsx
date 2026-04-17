@@ -298,7 +298,7 @@ function LoginScreen({ agents, onLogin }) {
               onChange={function(e){setPw(e.target.value);setErr("");}}
               onKeyDown={function(e){if(e.key==="Enter") doLogin();}}
               placeholder="Enter password" style={L.inp}/>
-            <button onClick={function(){setShow(function(p){return !p;});}} style={L.eyeBtn}>{show?"Hide":"Show"}</button>
+            <button onClick={function(){setShow(function(p){return !p;});}} style={L.eyeBtn}>{show?"\uD83D\uDE48":"\uD83D\uDC41\uFE0F"}</button>
           </div>
         </div>
         {err && <div style={L.err}>{err}</div>}
@@ -798,7 +798,7 @@ export default function App() {
                       {agent.role==="Manager"&&isManager&&<span style={S.mgrTag}>MGR</span>}
                       {isMe&&<span style={S.meBadge}>YOU</span>}
                       {agentBadges.map(function(b){
-                        return <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"#1e293b",border:"1px solid #f59e0b66",color:"#fbbf24",whiteSpace:"nowrap"}}>{b.icon} {b.label}</span>;
+                        return <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:theme==="dark"?"#1e293b":"#f1f5f9",border:"1px solid "+(theme==="dark"?"#f59e0b66":"#f59e0b99"),color:theme==="dark"?"#fbbf24":"#b45309",whiteSpace:"nowrap"}}>{b.icon} {b.label}</span>;
                       })}
                     </div>
                     <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:6}}>
