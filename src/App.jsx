@@ -331,8 +331,9 @@ function Confetti({ active, tvTheme }) {
   );
 }
 
-function CelebrationBanner({ celebration }) {
+function CelebrationBanner({ celebration, tvTheme }) {
   if (!celebration) return null;
+  if (tvTheme === "gameday") return null;
   var msg = celebration.type === "own_sale" ? "OWN SALE!" : celebration.type === "sold_transfer" ? "SENT & CLOSED!" : "BADGE EARNED!";
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"} },
@@ -498,36 +499,37 @@ export default function App() {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (tvTheme === "gameday") {
         /* Crowd roar — layered noise bursts with rising pitch */
-        for (var r = 0; r < 8; r++) {
+        for (var r = 0; r < 12; r++) {
           (function(ri) {
-            var buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+            var buf = ctx.createBuffer(1, ctx.sampleRate * 6, ctx.sampleRate);
             var data = buf.getChannelData(0);
             for (var s = 0; s < data.length; s++) {
-              data[s] = (Math.random()*2-1) * Math.min(1, s/(ctx.sampleRate*0.1)) * Math.max(0, 1-s/(ctx.sampleRate*2.5));
+              data[s] = (Math.random()*2-1) * Math.min(1, s/(ctx.sampleRate*0.15)) * Math.max(0, 1-s/(ctx.sampleRate*5));
             }
             var src = ctx.createBufferSource();
             var gain = ctx.createGain();
             var filter = ctx.createBiquadFilter();
             filter.type = "bandpass";
-            filter.frequency.value = 400 + ri * 200;
-            filter.Q.value = 0.8;
+            filter.frequency.value = 300 + ri * 180;
+            filter.Q.value = 0.7;
             src.buffer = buf;
             src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.08);
-            gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + ri*0.08 + 0.3);
-            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.08 + 2.5);
-            src.start(ctx.currentTime + ri*0.08);
+            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.05);
+            gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + ri*0.05 + 0.4);
+            gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + ri*0.05 + 3);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.05 + 6);
+            src.start(ctx.currentTime + ri*0.05);
           })(r);
         }
         /* Whistle */
-        [2400,2600,2400].forEach(function(freq,i) {
+        [2400,2600,2800,2600,2400].forEach(function(freq,i) {
           var osc=ctx.createOscillator(), gain=ctx.createGain();
           osc.connect(gain); gain.connect(ctx.destination);
           osc.frequency.value=freq; osc.type="sine";
-          gain.gain.setValueAtTime(0.4, ctx.currentTime+i*0.15);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.15+0.25);
-          osc.start(ctx.currentTime+i*0.15);
-          osc.stop(ctx.currentTime+i*0.15+0.25);
+          gain.gain.setValueAtTime(0.5, ctx.currentTime+i*0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.3);
+          osc.start(ctx.currentTime+i*0.18);
+          osc.stop(ctx.currentTime+i*0.18+0.3);
         });
       } else {
         [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
@@ -682,7 +684,7 @@ export default function App() {
   return (
     <div style={{...S.root,background:T.bg,color:T.text}}>
       <Confetti active={confetti} tvTheme={tvTheme}/>
-      <CelebrationBanner celebration={celebration}/>
+      <CelebrationBanner celebration={celebration} tvTheme={tvTheme}/>
       {showPwModal && <ChangePwModal user={currentUser} onClose={function(){setShowPwModal(false);}}/>}
 
       {/* TV MODE */}
