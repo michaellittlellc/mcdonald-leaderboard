@@ -96,7 +96,115 @@ const TV_THEMES = {
   },
 };
 
-const BADGES = [
+const BIBLE_VERSES = [
+  { ref:"John 3:16",        text:"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life." },
+  { ref:"Jeremiah 29:11",   text:"For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future." },
+  { ref:"Philippians 4:13", text:"I can do all this through him who gives me strength." },
+  { ref:"Romans 8:28",      text:"And we know that in all things God works for the good of those who love him, who have been called according to his purpose." },
+  { ref:"Proverbs 3:5-6",   text:"Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight." },
+  { ref:"Isaiah 40:31",     text:"But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint." },
+  { ref:"Psalm 23:1",       text:"The Lord is my shepherd, I lack nothing." },
+  { ref:"Matthew 6:33",     text:"But seek first his kingdom and his righteousness, and all these things will be given to you as well." },
+  { ref:"Joshua 1:9",       text:"Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go." },
+  { ref:"Psalm 46:1",       text:"God is our refuge and strength, an ever-present help in trouble." },
+  { ref:"Romans 12:2",      text:"Do not conform to the pattern of this world, but be transformed by the renewing of your mind." },
+  { ref:"2 Timothy 1:7",    text:"For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline." },
+  { ref:"Matthew 5:16",     text:"Let your light shine before others, that they may see your good deeds and glorify your Father in heaven." },
+  { ref:"Psalm 119:105",    text:"Your word is a lamp for my feet, a light on my path." },
+  { ref:"Proverbs 16:3",    text:"Commit to the Lord whatever you do, and he will establish your plans." },
+  { ref:"Galatians 6:9",    text:"Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up." },
+  { ref:"Isaiah 41:10",     text:"So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you." },
+  { ref:"Psalm 27:1",       text:"The Lord is my light and my salvation — whom shall I fear? The Lord is the stronghold of my life — of whom shall I be afraid?" },
+  { ref:"Matthew 11:28",    text:"Come to me, all you who are weary and burdened, and I will give you rest." },
+  { ref:"Romans 15:13",     text:"May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit." },
+  { ref:"Ephesians 2:8-9",  text:"For it is by grace you have been saved, through faith — and this is not from yourselves, it is the gift of God — not by works, so that no one can boast." },
+  { ref:"1 Corinthians 13:4-5", text:"Love is patient, love is kind. It does not envy, it does not boast, it is not proud. It does not dishonor others, it is not self-seeking." },
+  { ref:"Psalm 37:4",       text:"Take delight in the Lord, and he will give you the desires of your heart." },
+  { ref:"Proverbs 22:6",    text:"Start children off on the way they should go, and even when they are old they will not turn from it." },
+  { ref:"Philippians 4:6-7",text:"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." },
+  { ref:"1 John 4:19",      text:"We love because he first loved us." },
+  { ref:"James 1:2-3",      text:"Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance." },
+  { ref:"Hebrews 11:1",     text:"Now faith is confidence in what we hope for and assurance about what we do not see." },
+  { ref:"Psalm 91:1-2",     text:"Whoever dwells in the shelter of the Most High will rest in the shadow of the Almighty. I will say of the Lord, He is my refuge and my fortress, my God, in whom I trust." },
+  { ref:"John 14:6",        text:"Jesus answered, I am the way and the truth and the life. No one comes to the Father except through me." },
+  { ref:"Romans 6:23",      text:"For the wages of sin is death, but the gift of God is eternal life in Christ Jesus our Lord." },
+  { ref:"Psalm 139:14",     text:"I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+  { ref:"Matthew 28:19-20", text:"Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit." },
+  { ref:"John 16:33",       text:"I have told you these things, so that in me you may have peace. In this world you will have trouble. But take heart! I have overcome the world." },
+  { ref:"Proverbs 31:25",   text:"She is clothed with strength and dignity; she can laugh at the days to come." },
+  { ref:"Lamentations 3:22-23", text:"Because of the Lord's great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness." },
+  { ref:"Romans 8:38-39",   text:"For I am convinced that neither death nor life, neither angels nor demons, neither the present nor the future, nor any powers, can separate us from the love of God." },
+  { ref:"Ephesians 3:20",   text:"Now to him who is able to do immeasurably more than all we ask or imagine, according to his power that is at work within us." },
+  { ref:"John 15:13",       text:"Greater love has no one than this: to lay down one's life for one's friends." },
+  { ref:"Psalm 34:18",      text:"The Lord is close to the brokenhearted and saves those who are crushed in spirit." },
+  { ref:"Colossians 3:23",  text:"Whatever you do, work at it with all your heart, as working for the Lord, not for human masters." },
+  { ref:"Micah 6:8",        text:"He has shown you, O mortal, what is good. And what does the Lord require of you? To act justly and to love mercy and to walk humbly with your God." },
+  { ref:"Isaiah 43:2",      text:"When you pass through the waters, I will be with you; and when you pass through the rivers, they will not sweep over you." },
+  { ref:"Deuteronomy 31:8", text:"The Lord himself goes before you and will be with you; he will never leave you nor forsake you. Do not be afraid; do not be discouraged." },
+  { ref:"Romans 5:8",       text:"But God demonstrates his own love for us in this: While we were still sinners, Christ died for us." },
+  { ref:"Psalm 32:8",       text:"I will instruct you and teach you in the way you should go; I will counsel you with my loving eye on you." },
+  { ref:"John 10:10",       text:"The thief comes only to steal and kill and destroy; I have come that they may have life, and have it to the full." },
+  { ref:"1 Peter 5:7",      text:"Cast all your anxiety on him because he cares for you." },
+  { ref:"Proverbs 4:23",    text:"Above all else, guard your heart, for everything you do flows from it." },
+  { ref:"Matthew 5:9",      text:"Blessed are the peacemakers, for they will be called children of God." },
+  { ref:"Psalm 23:4",       text:"Even though I walk through the darkest valley, I will fear no evil, for you are with me; your rod and your staff, they comfort me." },
+  { ref:"Ephesians 6:10",   text:"Finally, be strong in the Lord and in his mighty power." },
+  { ref:"1 Chronicles 16:34",text:"Give thanks to the Lord, for he is good; his love endures forever." },
+  { ref:"Matthew 7:7",      text:"Ask and it will be given to you; seek and you will find; knock and the door will be opened to you." },
+  { ref:"Philippians 4:4",  text:"Rejoice in the Lord always. I will say it again: Rejoice!" },
+  { ref:"Isaiah 55:8-9",    text:"For my thoughts are not your thoughts, neither are your ways my ways, declares the Lord." },
+  { ref:"Hebrews 12:1",     text:"Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off everything that hinders and the sin that so easily entangles." },
+  { ref:"Genesis 1:1",      text:"In the beginning God created the heavens and the earth." },
+  { ref:"John 1:1",         text:"In the beginning was the Word, and the Word was with God, and the Word was God." },
+  { ref:"Psalm 100:4",      text:"Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name." },
+  { ref:"Romans 10:9",      text:"If you declare with your mouth, Jesus is Lord, and believe in your heart that God raised him from the dead, you will be saved." },
+  { ref:"Mark 12:30",       text:"Love the Lord your God with all your heart and with all your soul and with all your mind and with all your strength." },
+  { ref:"1 Corinthians 10:13",text:"No temptation has overtaken you except what is common to mankind. And God is faithful." },
+  { ref:"Revelation 21:4",  text:"He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain." },
+  { ref:"Psalm 16:8",       text:"I keep my eyes always on the Lord. With him at my right hand, I will not be shaken." },
+  { ref:"Proverbs 18:10",   text:"The name of the Lord is a fortified tower; the righteous run to it and are safe." },
+  { ref:"Colossians 3:15",  text:"Let the peace of Christ rule in your hearts, since as members of one body you were called to peace. And be thankful." },
+  { ref:"Zephaniah 3:17",   text:"The Lord your God is with you, the Mighty Warrior who saves. He will take great delight in you; in his love he will no longer rebuke you, but will rejoice over you with singing." },
+  { ref:"2 Corinthians 5:17",text:"Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!" },
+  { ref:"Psalm 46:10",      text:"Be still, and know that I am God; I will be exalted among the nations, I will be exalted in the earth." },
+  { ref:"John 8:32",        text:"Then you will know the truth, and the truth will set you free." },
+  { ref:"Matthew 5:6",      text:"Blessed are those who hunger and thirst for righteousness, for they will be filled." },
+  { ref:"Romans 12:12",     text:"Be joyful in hope, patient in affliction, faithful in prayer." },
+  { ref:"Psalm 145:18",     text:"The Lord is near to all who call on him, to all who call on him in truth." },
+  { ref:"Hebrews 4:16",     text:"Let us then approach God's throne of grace with confidence, so that we may receive mercy and find grace to help us in our time of need." },
+  { ref:"Proverbs 27:17",   text:"As iron sharpens iron, so one person sharpens another." },
+  { ref:"Isaiah 26:3",      text:"You will keep in perfect peace those whose minds are steadfast, because they trust in you." },
+  { ref:"Ephesians 4:32",   text:"Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you." },
+  { ref:"John 14:27",       text:"Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled and do not be afraid." },
+  { ref:"1 John 1:9",       text:"If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness." },
+  { ref:"Psalm 55:22",      text:"Cast your cares on the Lord and he will sustain you; he will never let the righteous be shaken." },
+  { ref:"Matthew 5:44",     text:"But I tell you, love your enemies and pray for those who persecute you." },
+  { ref:"2 Corinthians 12:9",text:"But he said to me, My grace is sufficient for you, for my power is made perfect in weakness." },
+  { ref:"Proverbs 3:9-10",  text:"Honor the Lord with your wealth, with the firstfruits of all your crops; then your barns will be filled to overflowing." },
+  { ref:"Psalm 28:7",       text:"The Lord is my strength and my shield; my heart trusts in him, and he helps me." },
+  { ref:"Philippians 1:6",  text:"Being confident of this, that he who began a good work in you will carry it on to completion until the day of Christ Jesus." },
+  { ref:"Isaiah 40:29",     text:"He gives strength to the weary and increases the power of the weak." },
+  { ref:"James 4:7",        text:"Submit yourselves, then, to God. Resist the devil, and he will flee from you." },
+  { ref:"Psalm 121:1-2",    text:"I lift up my eyes to the mountains — where does my help come from? My help comes from the Lord, the Maker of heaven and earth." },
+  { ref:"Acts 1:8",         text:"But you will receive power when the Holy Spirit comes on you; and you will be my witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth." },
+  { ref:"Luke 1:37",        text:"For no word from God will ever fail." },
+  { ref:"1 Thessalonians 5:16-18", text:"Rejoice always, pray continually, give thanks in all circumstances; for this is God's will for you in Christ Jesus." },
+  { ref:"Proverbs 11:14",   text:"For lack of guidance a nation falls, but victory is won through many advisers." },
+  { ref:"Psalm 19:14",      text:"May these words of my mouth and this meditation of my heart be pleasing in your sight, Lord, my Rock and my Redeemer." },
+  { ref:"John 3:30",        text:"He must become greater; I must become less." },
+  { ref:"Matthew 22:37-39", text:"Love the Lord your God with all your heart and with all your soul and with all your mind. This is the first and greatest commandment. And the second is like it: Love your neighbor as yourself." },
+  { ref:"Romans 1:16",      text:"For I am not ashamed of the gospel, because it is the power of God that brings salvation to everyone who believes." },
+  { ref:"Psalm 51:10",      text:"Create in me a pure heart, O God, and renew a steadfast spirit within me." },
+  { ref:"Proverbs 29:18",   text:"Where there is no revelation, people cast off restraint; but blessed is the one who heeds wisdom's instruction." },
+];
+
+// Get a consistent verse for the current week (changes every Monday)
+const getWeeklyVerse = () => {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.floor((now - startOfYear) / (7 * 24 * 60 * 60 * 1000));
+  return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
+};
   { id:"first_sale",    label:"First Sale",   icon:"🎯", condition:(s,pts,tdp) => s.own_sale >= 1 },
   { id:"ten_transfers", label:"10 Transfers", icon:"⚡", condition:(s,pts,tdp) => s.transfer >= 10 },
   { id:"hat_trick",     label:"Hat Trick",    icon:"🎩", condition:(s,pts,tdp) => s.own_sale >= 3 },
@@ -525,6 +633,14 @@ export default function App() {
               <button onClick={()=>setTvMode(false)} style={{padding:"8px 16px",borderRadius:8,border:`1px solid ${TV.border}`,background:"transparent",color:TV.muted,cursor:"pointer",fontSize:13,fontWeight:700}}>Exit</button>
             </div>
           </div>
+          {/* Weekly Bible Verse */}
+          {(()=>{ const v=getWeeklyVerse(); return (
+            <div style={{textAlign:"center",marginBottom:16,padding:"12px 24px",background:TV.card,border:`1px solid ${TV.border}`,borderRadius:14,opacity:0.9}}>
+              <div style={{fontSize:"clamp(11px,1.2vw,15px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:6}}>✝️ VERSE OF THE WEEK</div>
+              <div style={{fontSize:"clamp(13px,1.5vw,18px)",color:TV.text,fontStyle:"italic",lineHeight:1.5,maxWidth:900,margin:"0 auto"}}>"{v.text}"</div>
+              <div style={{fontSize:"clamp(11px,1.2vw,14px)",color:TV.muted,fontWeight:700,marginTop:6,letterSpacing:1}}>— {v.ref}</div>
+            </div>
+          ); })()}
           {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
             <div style={{display:"flex",gap:16,marginBottom:16,justifyContent:"center"}}>
               {prizes.gold   && <span style={{fontSize:16,fontWeight:700,color:TV.text,background:TV.card,border:`1px solid ${TV.border}`,padding:"6px 18px",borderRadius:20}}>🥇 {prizes.gold}</span>}
