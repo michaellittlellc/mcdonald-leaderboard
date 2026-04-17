@@ -192,7 +192,6 @@ function calcWeeklyApps(actLog, agentId) {
       t >= monday;
   }).length;
 }
-function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
 
 
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
