@@ -573,38 +573,9 @@ export default function App() {
 
   function playSound() {
     try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (tvTheme === "gameday") {
-        /* Touchdown fanfare - triumphant brass-like tones */
-        var fanfare = [
-          {f:523, t:0,    d:0.15},
-          {f:523, t:0.15, d:0.15},
-          {f:784, t:0.3,  d:0.4},
-          {f:659, t:0.75, d:0.15},
-          {f:698, t:0.9,  d:0.15},
-          {f:784, t:1.05, d:0.6},
-          {f:1047,t:1.7,  d:0.8},
-        ];
-        fanfare.forEach(function(n) {
-          var osc=ctx.createOscillator(), gain=ctx.createGain();
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.frequency.value=n.f; osc.type="square";
-          gain.gain.setValueAtTime(0.25, ctx.currentTime+n.t);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+n.t+n.d);
-          osc.start(ctx.currentTime+n.t);
-          osc.stop(ctx.currentTime+n.t+n.d+0.05);
-        });
-      } else {
-        [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
-          var osc=ctx.createOscillator(), gain=ctx.createGain();
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.frequency.value=freq; osc.type="sine";
-          gain.gain.setValueAtTime(0.3, ctx.currentTime+i*0.18);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.4);
-          osc.start(ctx.currentTime+i*0.18);
-          osc.stop(ctx.currentTime+i*0.18+0.4);
-        });
-      }
+      var audio = new Audio("/champagneglass.mp3");
+      audio.volume = 1.0;
+      audio.play();
     } catch(e) {}
   }
 
