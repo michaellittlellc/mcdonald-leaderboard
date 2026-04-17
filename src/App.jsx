@@ -353,7 +353,7 @@ function CelebrationBanner({ celebration, tvTheme }) {
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"} },
       React.createElement("div", { style:{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"} },
-        tvTheme === "gameday" && React.createElement("div", { style:{fontSize:"clamp(20px,3.5vw,56px)",fontWeight:900,color:"#fbbf24",letterSpacing:3,marginBottom:16,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase",marginTop:"-80px"} }, "IT'S GOOD!"),
+
         React.createElement("div", { style:{fontSize:"clamp(18px,4vw,48px)",fontWeight:900,color:"#fbbf24",letterSpacing:4,marginBottom:12,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"} }, msg),
         React.createElement("div", { style:{fontSize:"clamp(32px,8vw,96px)",fontWeight:900,color:"#ffffff",letterSpacing:2,textShadow:"0 0 60px #60a5fa,0 0 120px #3b82f688",fontFamily:"'Trebuchet MS',sans-serif",lineHeight:1.1} }, celebration.name),
         React.createElement("div", { style:{fontSize:"clamp(14px,2.5vw,28px)",color:"#94a3b8",marginTop:10,letterSpacing:3,fontFamily:"'Trebuchet MS',sans-serif"} }, "McDONALD GROUP")
