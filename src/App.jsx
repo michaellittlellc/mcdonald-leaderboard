@@ -333,11 +333,11 @@ function Confetti({ active, tvTheme }) {
 
 function CelebrationBanner({ celebration, tvTheme }) {
   if (!celebration) return null;
-  if (tvTheme === "gameday") return null;
   var msg = celebration.type === "own_sale" ? "OWN SALE!" : celebration.type === "sold_transfer" ? "SENT & CLOSED!" : "BADGE EARNED!";
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"} },
       React.createElement("div", { style:{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"} },
+        tvTheme === "gameday" && React.createElement("div", { style:{fontSize:"clamp(20px,3.5vw,56px)",fontWeight:900,color:"#fbbf24",letterSpacing:3,marginBottom:6,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"} }, "IT'S GOOD!"),
         React.createElement("div", { style:{fontSize:"clamp(18px,4vw,48px)",fontWeight:900,color:"#fbbf24",letterSpacing:4,marginBottom:12,textShadow:"0 0 40px #f59e0b,0 0 80px #f59e0b88",fontFamily:"'Trebuchet MS',sans-serif",textTransform:"uppercase"} }, msg),
         React.createElement("div", { style:{fontSize:"clamp(32px,8vw,96px)",fontWeight:900,color:"#ffffff",letterSpacing:2,textShadow:"0 0 60px #60a5fa,0 0 120px #3b82f688",fontFamily:"'Trebuchet MS',sans-serif",lineHeight:1.1} }, celebration.name),
         React.createElement("div", { style:{fontSize:"clamp(14px,2.5vw,28px)",color:"#94a3b8",marginTop:10,letterSpacing:3,fontFamily:"'Trebuchet MS',sans-serif"} }, "McDONALD GROUP")
@@ -498,38 +498,46 @@ export default function App() {
     try {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (tvTheme === "gameday") {
-        /* Crowd roar — layered noise bursts with rising pitch */
+        /* Deep crowd roar - low frequency human voices */
+        var roarFreqs = [80,120,160,200,240,280,180,140,100,220,260,90];
         for (var r = 0; r < 12; r++) {
           (function(ri) {
             var buf = ctx.createBuffer(1, ctx.sampleRate * 6, ctx.sampleRate);
             var data = buf.getChannelData(0);
             for (var s = 0; s < data.length; s++) {
-              data[s] = (Math.random()*2-1) * Math.min(1, s/(ctx.sampleRate*0.15)) * Math.max(0, 1-s/(ctx.sampleRate*5));
+              /* Pink noise for more natural human crowd sound */
+              data[s] = (Math.random()*2-1) * 0.8 * Math.min(1, s/(ctx.sampleRate*0.2)) * Math.max(0, 1-s/(ctx.sampleRate*5.5));
             }
             var src = ctx.createBufferSource();
             var gain = ctx.createGain();
-            var filter = ctx.createBiquadFilter();
-            filter.type = "bandpass";
-            filter.frequency.value = 300 + ri * 180;
-            filter.Q.value = 0.7;
+            var lowpass = ctx.createBiquadFilter();
+            var bandpass = ctx.createBiquadFilter();
+            lowpass.type = "lowpass";
+            lowpass.frequency.value = 800;
+            bandpass.type = "bandpass";
+            bandpass.frequency.value = roarFreqs[ri] || 150;
+            bandpass.Q.value = 0.5;
             src.buffer = buf;
-            src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.05);
-            gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + ri*0.05 + 0.4);
-            gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + ri*0.05 + 3);
-            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.05 + 6);
-            src.start(ctx.currentTime + ri*0.05);
+            src.connect(bandpass);
+            bandpass.connect(lowpass);
+            lowpass.connect(gain);
+            gain.connect(ctx.destination);
+            gain.gain.setValueAtTime(0, ctx.currentTime + ri*0.04);
+            gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + ri*0.04 + 0.5);
+            gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + ri*0.04 + 3.5);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + ri*0.04 + 6.5);
+            src.start(ctx.currentTime + ri*0.04);
           })(r);
         }
-        /* Whistle */
-        [2400,2600,2800,2600,2400].forEach(function(freq,i) {
+        /* Referee whistle */
+        [2200,2500,2800,2500,2200,2500].forEach(function(freq,i) {
           var osc=ctx.createOscillator(), gain=ctx.createGain();
           osc.connect(gain); gain.connect(ctx.destination);
           osc.frequency.value=freq; osc.type="sine";
-          gain.gain.setValueAtTime(0.5, ctx.currentTime+i*0.18);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.18+0.3);
-          osc.start(ctx.currentTime+i*0.18);
-          osc.stop(ctx.currentTime+i*0.18+0.3);
+          gain.gain.setValueAtTime(0.5, ctx.currentTime+i*0.2);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.2+0.3);
+          osc.start(ctx.currentTime+i*0.2);
+          osc.stop(ctx.currentTime+i*0.2+0.3);
         });
       } else {
         [523,659,784,1047,1319,1047,784].forEach(function(freq,i) {
