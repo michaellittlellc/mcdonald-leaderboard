@@ -594,8 +594,8 @@ export default function App() {
           {/* Bible Verse */}
           <div style={{textAlign:"center",marginBottom:12,padding:"10px 24px",background:TV.card,border:"1px solid "+TV.border,borderRadius:14,opacity:0.9}}>
             <div style={{fontSize:"clamp(13px,1.4vw,16px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:6}}>VERSE OF THE WEEK</div>
-            <div style={{fontSize:"clamp(16px,2vw,26px)",color:TV.text,fontStyle:"italic",lineHeight:1.6,maxWidth:1000,margin:"0 auto"}}>"{weeklyVerse.text}"</div>
-            <div style={{fontSize:"clamp(13px,1.4vw,18px)",color:TV.muted,fontWeight:700,marginTop:6,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
+            <div style={{fontSize:"clamp(20px,2.8vw,36px)",color:TV.text,fontStyle:"italic",lineHeight:1.6,maxWidth:1000,margin:"0 auto"}}>"{weeklyVerse.text}"</div>
+            <div style={{fontSize:"clamp(16px,1.8vw,24px)",color:TV.muted,fontWeight:700,marginTop:6,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
           </div>
 
           {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
