@@ -352,7 +352,7 @@ function LoginScreen({ agents, onLogin }) {
           </div>
         </div>
         {err && <div style={L.err}>{err}</div>}
-        <button onClick={doLogin} style={L.btn}>Sign In →</button>
+        <button onClick={doLogin} style={L.btn}>Sign In =></button>
       </div>
     </div>
   );
