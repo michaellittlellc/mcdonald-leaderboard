@@ -8,7 +8,7 @@ import {
 const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
-const POINT_VALUES = { transfer:1, sold_transfer:1, closed_transfer:2, own_sale:3 };
+const POINT_VALUES = { transfer:1, sold_transfer:1, closed_transfer:2, own_sale:3, hospital_sale:2 };
 
 const ADMIN_MANAGERS = [
   { id:"mgr-tee",     name:"Tee Adams",      role:"Manager", isAdminManager:true },
@@ -175,8 +175,8 @@ function getWeeklyVerse() {
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 }
 
-function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3; }
-function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
+function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3 + (s.hospital_sale||0)*2; }
+function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale + (s.hospital_sale||0); }
 function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
 
 function calcWeeklyApps(actLog, agentId) {
@@ -192,8 +192,8 @@ function calcWeeklyApps(actLog, agentId) {
       t >= monday;
   }).length;
 }
-
-
+function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
+function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
 
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
@@ -653,7 +653,7 @@ export default function App() {
     await addDoc(collection(db,"activityLog"),{
       time:serverTimestamp(), agentId:agentId, agentName:agent&&agent.name, type:type, by:currentUser.name
     });
-    var shouldCelebrate = type==="sold_transfer" || type==="own_sale";
+    var shouldCelebrate = type==="sold_transfer" || type==="own_sale" || type==="hospital_sale";
     var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp) && !b.condition(prev,prevPts,prevTdp); });
     if(shouldCelebrate || milestone){
       var celebType = shouldCelebrate ? type : "badge";
@@ -722,10 +722,11 @@ export default function App() {
   var totTrans = ranked.reduce(function(s,a){ return s+a.stats.transfer; }, 0);
 
   var actTypes = [
-    {type:"transfer",        label:"Sent Transfer",     color:"#3b82f6", pts:1},
-    {type:"sold_transfer",   label:"Sent & Closed",     color:"#8b5cf6", pts:1},
-    {type:"closed_transfer", label:"Received & Closed", color:"#f59e0b", pts:2},
-    {type:"own_sale",        label:"Own Sale",           color:"#10b981", pts:3},
+    {type:"transfer",        label:"Sent Transfer",        color:"#3b82f6", pts:1},
+    {type:"sold_transfer",   label:"Sent & Closed",        color:"#8b5cf6", pts:1},
+    {type:"closed_transfer", label:"Received & Closed",    color:"#f59e0b", pts:2},
+    {type:"own_sale",        label:"Own Sale",              color:"#10b981", pts:3},
+    {type:"hospital_sale",   label:"Hospital Indemnity",   color:"#ec4899", pts:2},
   ];
 
   function fmtTime(ts) {
@@ -947,7 +948,7 @@ export default function App() {
       {view==="board" && (
         <div style={S.content}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
-            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:1,color:"#a78bfa"},{label:"Received & Closed",pts:2,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"}].map(function(item){
+            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:1,color:"#a78bfa"},{label:"Received & Closed",pts:2,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:2,color:"#ec4899"}].map(function(item){
               return (
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:6,background:T.cardBg,border:"1px solid "+T.border,borderRadius:20,padding:"5px 12px"}}>
                   <div style={{width:8,height:8,borderRadius:"50%",background:item.color}}/>
@@ -1002,6 +1003,7 @@ export default function App() {
                       <span style={{fontSize:11,color:"#a78bfa"}}>{agent.stats.sold_transfer} s&c</span>
                       <span style={{fontSize:11,color:"#f59e0b"}}>{agent.stats.closed_transfer} r&c</span>
                       <span style={{fontSize:11,color:"#34d399"}}>{agent.stats.own_sale} own</span>
+                      {agent.stats.hospital_sale > 0 && <span style={{fontSize:11,color:"#ec4899"}}>{agent.stats.hospital_sale} hosp</span>}
                       <span style={{fontSize:11,color:"#f59e0b",fontWeight:700}}>{agent.apps} apps</span>
                       <span style={{fontSize:11,color:"#34d399",fontWeight:700,background:"#34d39922",padding:"1px 6px",borderRadius:8}}>
                         {calcWeeklyApps(actLog,agent.id)} apps this week
