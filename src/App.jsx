@@ -192,7 +192,8 @@ function calcWeeklyApps(actLog, agentId) {
       t >= monday;
   }).length;
 }
-
+function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
+function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
 
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
@@ -872,7 +873,7 @@ export default function App() {
               return (
                 <button key={v} onClick={function(){setView(v);}}
                   style={{...S.navBtn,border:"1px solid "+(active?"#3b82f6":T.border),color:active?"#f1f5f9":T.muted,background:active?"#1e3a5f":"transparent"}}>
-                  {v==="board"?"Board":v==="entry"?"Log":v==="stats"?"Stats":v==="feed"?"Feed":"Manage"}
+                  {v==="board"?"Board":v==="entry"?"Log":v==="stats"?"Stats":v==="alltime"?"All Time":v==="feed"?"Feed":"Manage"}
                 </button>
               );
             })}
@@ -1003,7 +1004,6 @@ export default function App() {
                       <span style={{fontSize:11,color:"#f59e0b"}}>{agent.stats.closed_transfer} r&c</span>
                       <span style={{fontSize:11,color:"#34d399"}}>{agent.stats.own_sale} own</span>
                       {agent.stats.hospital_sale > 0 && <span style={{fontSize:11,color:"#ec4899"}}>{agent.stats.hospital_sale} hosp</span>}
-                      <span style={{fontSize:11,color:"#f59e0b",fontWeight:700}}>{agent.apps} apps</span>
                       <span style={{fontSize:11,color:"#34d399",fontWeight:700,background:"#34d39922",padding:"1px 6px",borderRadius:8}}>
                         {calcWeeklyApps(actLog,agent.id)} apps this week
                       </span>
@@ -1111,6 +1111,37 @@ export default function App() {
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
                     <span style={{fontSize:24,fontWeight:900,color:"#60a5fa"}}>{agent.points}</span>
                     <span style={{fontSize:9,color:T.muted,letterSpacing:2}}>PTS</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ALL TIME */}
+      {view==="alltime" && (
+        <div style={S.content}>
+          <div style={{fontSize:20,fontWeight:900,color:T.text,marginBottom:20,letterSpacing:1}}>All Time Stats</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {ranked.map(function(agent,idx){
+              return (
+                <div key={agent.id} style={{display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",background:T.cardBg,border:"1px solid "+T.border}}>
+                  <div style={{width:36,fontWeight:900,color:T.muted,fontSize:16,textAlign:"center"}}>{idx+1}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:15,fontWeight:800,color:T.text,marginBottom:8}}>{agent.name}</div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#3b82f622",color:"#60a5fa",fontWeight:700}}>{agent.stats.transfer} Transfers</div>
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#8b5cf622",color:"#a78bfa",fontWeight:700}}>{agent.stats.sold_transfer} Sent & Closed</div>
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f59e0b22",color:"#f59e0b",fontWeight:700}}>{agent.stats.closed_transfer} Received & Closed</div>
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#10b98122",color:"#34d399",fontWeight:700}}>{agent.stats.own_sale} Own Sales</div>
+                      {(agent.stats.hospital_sale||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#ec489922",color:"#ec4899",fontWeight:700}}>{agent.stats.hospital_sale} Hospital</div>}
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#34d39922",color:"#34d399",fontWeight:800}}>{agent.apps} Total Apps</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
+                    <span style={{fontSize:28,fontWeight:900,color:"#60a5fa",lineHeight:1}}>{agent.points}</span>
+                    <span style={{fontSize:10,color:T.muted,letterSpacing:2,fontWeight:700}}>PTS</span>
                   </div>
                 </div>
               );
