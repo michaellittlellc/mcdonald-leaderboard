@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { db } from "./firebase";
 import {
-  doc, setDoc, onSnapshot, collection, addDoc,
-  query, orderBy, limit, serverTimestamp
+  doc, setDoc, onSnapshot, collection, addDoc, deleteDoc,
+  query, orderBy, limit, serverTimestamp, getDocs
 } from "firebase/firestore";
 
 const DEFAULT_PASSWORD  = "Password123!";
@@ -176,6 +176,9 @@ function getWeeklyVerse() {
 }
 
 function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3; }
+function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale; }
+function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0 }; }
+
 function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
@@ -666,6 +669,13 @@ export default function App() {
     newStats[agentId] = newStat;
     setStats(newStats);
     await saveSettings({ stats: newStats });
+    // Remove most recent matching entry from activity log
+    try {
+      var match = actLog.find(function(e){ return e.agentId === agentId && e.type === type; });
+      if(match && match.id) {
+        await deleteDoc(doc(db,"activityLog", match.id));
+      }
+    } catch(e){ console.error(e); }
   }
 
   async function addAgent() {
@@ -689,6 +699,16 @@ export default function App() {
     var newStats = Object.fromEntries(agents.map(function(a){ return [a.id,initStats()]; }));
     setStats(newStats);
     await saveSettings({ stats:newStats });
+  }
+
+  async function resetActivityLog() {
+    if(!window.confirm("Clear the entire activity log? This cannot be undone.")) return;
+    try {
+      var logQ = query(collection(db,"activityLog"), limit(200));
+      var snap = await getDocs(logQ);
+      await Promise.all(snap.docs.map(function(d){ return deleteDoc(d.ref); }));
+      setActLog([]);
+    } catch(e){ console.error(e); }
   }
 
   var ranked = [...agents]
@@ -1141,6 +1161,7 @@ export default function App() {
             <button onClick={addAgent} style={{padding:"10px 20px",borderRadius:8,border:"none",background:"#2563eb",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Add Agent</button>
           </div>
           <button onClick={resetAll} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer"}}>Reset All Points</button>
+          <button onClick={resetActivityLog} style={{padding:"10px 20px",borderRadius:8,border:"1px solid #7f1d1d",background:"transparent",color:"#f87171",fontSize:13,fontWeight:700,cursor:"pointer",marginTop:8}}>Clear Activity Log</button>
         </div>
       )}
     </div>
