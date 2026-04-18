@@ -216,6 +216,42 @@ function calcWeeklyHospital(actLog, agentId) {
   }).length;
 }
 
+function calcWeeklyTransfers(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "transfer" && t >= monday;
+  }).length;
+}
+
+function calcWeeklySuccessfulTransfers(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && (e.type === "sold_transfer" || e.type === "closed_transfer") && t >= monday;
+  }).length;
+}
+
+function calcWeeklyOwnSales(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "own_sale" && t >= monday;
+  }).length;
+}
+
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
 
@@ -853,17 +889,29 @@ export default function App() {
                     )}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:20,fontWeight:900,color:isTop3?tc.shine:TV.text,display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
+                    <div style={{fontSize:"clamp(18px,2vw,26px)",fontWeight:900,color:isTop3?tc.shine:TV.text,display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
                       {agent.name}
                       {agentBadges.map(function(b){
                         return <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:12,fontWeight:700,padding:"2px 8px",borderRadius:20,background:TV.card,border:"1px solid #f59e0b66",color:"#fbbf24"}}>{b.icon} {b.label}</span>;
                       })}
                     </div>
-                    <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden",marginBottom:5}}>
+                    <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden",marginBottom:7}}>
                       <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
                     </div>
-                    <div style={{fontSize:"clamp(11px,1.1vw,14px)",color:TV.muted,fontWeight:600}}>
-                      {calcWeeklyApps(actLog,agent.id)} apps this week
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {[
+                        { label:"Transfers",             value:calcWeeklyTransfers(actLog,agent.id),            color:"#60a5fa" },
+                        { label:"Successful Transfers",  value:calcWeeklySuccessfulTransfers(actLog,agent.id),  color:"#a78bfa" },
+                        { label:"MA Sales",              value:calcWeeklyOwnSales(actLog,agent.id),             color:"#34d399" },
+                        { label:"HIP Sales",             value:calcWeeklyHospital(actLog,agent.id),             color:"#f472b6" },
+                      ].map(function(stat){
+                        return (
+                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"4px 12px",borderRadius:20,border:"1px solid "+stat.color+"55",background:stat.color+"15"}}>
+                            <span style={{fontSize:"clamp(13px,1.3vw,17px)",fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
+                            <span style={{fontSize:"clamp(10px,0.95vw,13px)",fontWeight:600,color:TV.muted}}>{stat.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
