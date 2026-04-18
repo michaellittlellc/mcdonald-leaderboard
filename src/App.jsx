@@ -629,6 +629,7 @@ export default function App() {
   var [weekLabel,setWeekLabel]     = useState("");
   var [tvMode,setTvMode]           = useState(false);
   var [manualBadges,setManualBadges] = useState({});
+  var [lockedEntryOrder,setLockedEntryOrder] = useState(null);
 
   function login(acct)  { setUser(acct); try { localStorage.setItem("mgl-user",JSON.stringify(acct)); } catch(e){} }
   function logout()     { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); }
@@ -821,7 +822,12 @@ export default function App() {
   function typeLabel(t) { var f=actTypes.find(function(a){ return a.type===t; }); return f?f.label:t; }
   function typeColor(t) { var f=actTypes.find(function(a){ return a.type===t; }); return f?f.color:"#fff"; }
 
-  var entryAgents = isManager ? ranked : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
+  var entryAgentsSorted = isManager
+    ? (lockedEntryOrder
+        ? lockedEntryOrder.map(function(id){ return ranked.find(function(a){ return a.id===id; }); }).filter(Boolean)
+        : ranked)
+    : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
+  var entryAgents = entryAgentsSorted;
   var navItems    = ["board","entry","stats"].concat(isManager?["feed","manage"]:[]);
   var myData      = ranked.find(function(a){ return a.id===(currentUser&&currentUser.id); });
   var myRank      = myData ? ranked.indexOf(myData)+1 : null;
@@ -969,7 +975,7 @@ export default function App() {
             {navItems.map(function(v){
               var active = view===v;
               return (
-                <button key={v} onClick={function(){setView(v);}}
+                <button key={v} onClick={function(){ setView(v); if(v==="entry"){ setLockedEntryOrder(ranked.map(function(a){ return a.id; })); } else { setLockedEntryOrder(null); } }}
                   style={{...S.navBtn,border:"1px solid "+(active?"#3b82f6":T.border),color:active?"#f1f5f9":T.muted,background:active?"#1e3a5f":"transparent"}}>
                   {v==="board"?"Board":v==="entry"?"Log":v==="stats"?"Stats":v==="alltime"?"All Time":v==="feed"?"Feed":"Manage"}
                 </button>
