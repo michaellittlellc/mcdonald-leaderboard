@@ -228,7 +228,7 @@ function calcWeeklyTransfers(actLog, agentId) {
   }).length;
 }
 
-function calcWeeklySuccessfulTransfers(actLog, agentId) {
+function calcWeeklySentTransfersClosed(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
   var diff = now.getDate() - day + (day === 0 ? -6 : 1);
@@ -236,7 +236,19 @@ function calcWeeklySuccessfulTransfers(actLog, agentId) {
   monday.setHours(0,0,0,0);
   return actLog.filter(function(e) {
     var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
-    return e.agentId === agentId && (e.type === "sold_transfer" || e.type === "closed_transfer") && t >= monday;
+    return e.agentId === agentId && e.type === "sold_transfer" && t >= monday;
+  }).length;
+}
+
+function calcWeeklyReceivedTransfersClosed(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "closed_transfer" && t >= monday;
   }).length;
 }
 
@@ -900,10 +912,11 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       {[
-                        { label:"Transfers",             value:calcWeeklyTransfers(actLog,agent.id),            color:"#60a5fa" },
-                        { label:"Successful Transfers",  value:calcWeeklySuccessfulTransfers(actLog,agent.id),  color:"#a78bfa" },
-                        { label:"MA Sales",              value:calcWeeklyOwnSales(actLog,agent.id),             color:"#34d399" },
-                        { label:"HIP Sales",             value:calcWeeklyHospital(actLog,agent.id),             color:"#f472b6" },
+                        { label:"Transfers",                  value:calcWeeklyTransfers(actLog,agent.id),                   color:"#60a5fa" },
+                        { label:"Sent Transfers Closed",      value:calcWeeklySentTransfersClosed(actLog,agent.id),         color:"#a78bfa" },
+                        { label:"Received Transfers Closed",  value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),     color:"#f59e0b" },
+                        { label:"MA Sales",                   value:calcWeeklyOwnSales(actLog,agent.id),                    color:"#34d399" },
+                        { label:"HIP Sales",                  value:calcWeeklyHospital(actLog,agent.id),                    color:"#f472b6" },
                       ].map(function(stat){
                         return (
                           <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"4px 12px",borderRadius:20,border:"1px solid "+stat.color+"55",background:stat.color+"15"}}>
