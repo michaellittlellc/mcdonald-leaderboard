@@ -29,6 +29,7 @@ const AGENTS_DEFAULT = [
   { id:10, name:"Chipper Wiley",     role:"Agent" },
   { id:11, name:"Madison Crowley",   role:"Manager" },
   { id:12, name:"Dana Gordy",        role:"Agent" },
+  { id:13, name:"Christian Morley",   role:"Agent" },
 ];
 
 const TROPHY_COLORS = {
