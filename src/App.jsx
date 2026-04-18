@@ -810,10 +810,10 @@ export default function App() {
           </div>
 
           {/* Bible Verse */}
-          <div style={{textAlign:"center",marginBottom:8,padding:"6px 32px",background:TV.card,border:"1px solid "+TV.border,borderRadius:14,opacity:0.9}}>
-            <div style={{fontSize:"clamp(11px,1.1vw,13px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:2}}>VERSE OF THE WEEK</div>
-            <div style={{fontSize:"clamp(15px,1.8vw,26px)",color:TV.text,fontStyle:"italic",lineHeight:1.3,maxWidth:"100%",margin:"0 auto"}}>"{weeklyVerse.text}"</div>
-            <div style={{fontSize:"clamp(12px,1.3vw,19px)",color:TV.muted,fontWeight:700,marginTop:2,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
+          <div style={{textAlign:"center",marginBottom:8,padding:"8px 32px",background:TV.card,border:"1px solid "+TV.border,borderRadius:14,opacity:0.9}}>
+            <div style={{fontSize:"clamp(12px,1.2vw,15px)",color:TV.accent,fontWeight:700,letterSpacing:2,marginBottom:3}}>VERSE OF THE WEEK</div>
+            <div style={{fontSize:"clamp(18px,2.4vw,34px)",color:TV.text,fontStyle:"italic",lineHeight:1.35,maxWidth:"100%",margin:"0 auto"}}>"{weeklyVerse.text}"</div>
+            <div style={{fontSize:"clamp(14px,1.6vw,23px)",color:TV.muted,fontWeight:700,marginTop:3,letterSpacing:1}}>-- {weeklyVerse.ref}</div>
           </div>
 
           {canSeePrizes && (prizes.gold||prizes.silver||prizes.bronze) && (
