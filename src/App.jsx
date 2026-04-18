@@ -651,26 +651,30 @@ export default function App() {
     return calcWeeklyHospital(actLog, agentId);
   }
 
-  function playSound() {
-    if (!tvMode) return;
-    try {
-      var audio = new Audio("/champagneglass.mp3");
-      audio.volume = 1.0;
-      audio.play();
-    } catch(e) {}
-  }
-
   useEffect(function(){
     var unsub = onSnapshot(doc(db,"settings","celebrate"), function(snap){
       if(snap.exists() && snap.data().active){
         var d = snap.data();
-        setConfetti(true); playSound();
+        setConfetti(true);
         setCelebration({ name:d.by, type:d.type, badgeId:d.badgeId||null });
         setTimeout(function(){ setConfetti(false); setCelebration(null); }, 10000);
       }
     });
     return function(){ unsub(); };
   },[]);
+
+  useEffect(function(){
+    var unsub = onSnapshot(doc(db,"settings","celebrate"), function(snap){
+      if(snap.exists() && snap.data().active && tvMode){
+        try {
+          var audio = new Audio("/champagneglass.mp3");
+          audio.volume = 1.0;
+          audio.play().catch(function(e){ console.log("Audio blocked:",e); });
+        } catch(e){ console.log("Audio error:",e); }
+      }
+    });
+    return function(){ unsub(); };
+  },[tvMode]);
 
   useEffect(function(){
     var unsubSettings = onSnapshot(doc(db,"settings","main"), function(snap){
