@@ -1099,18 +1099,24 @@ export default function App() {
                         return <span key={b.id} style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:theme==="dark"?"#1e293b":"#f1f5f9",border:"1px solid "+(theme==="dark"?"#f59e0b66":"#f59e0b99"),color:theme==="dark"?"#fbbf24":"#b45309",whiteSpace:"nowrap"}}>{b.icon} {b.label}</span>;
                       })}
                     </div>
-                    <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:6}}>
+                    <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:7}}>
                       <div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
                     </div>
-                    <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-                      <span style={{fontSize:11,color:"#60a5fa"}}>{agent.stats.transfer} transfers</span>
-                      <span style={{fontSize:11,color:"#a78bfa"}}>{agent.stats.sold_transfer} s&c</span>
-                      <span style={{fontSize:11,color:"#f59e0b"}}>{agent.stats.closed_transfer} r&c</span>
-                      <span style={{fontSize:11,color:"#34d399"}}>{agent.stats.own_sale} own</span>
-                      {(agent.stats.hospital_sale||0) > 0 && <span style={{fontSize:11,color:"#ec4899"}}>{agent.stats.hospital_sale} hosp</span>}
-                      <span style={{fontSize:11,color:"#34d399",fontWeight:700,background:"#34d39922",padding:"1px 6px",borderRadius:8}}>
-                        {calcWeeklyApps(actLog,agent.id)} apps this week
-                      </span>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      {[
+                        { label:"Transfers",                 value:calcWeeklyTransfers(actLog,agent.id),                  color:"#60a5fa" },
+                        { label:"Sent Transfers Closed",     value:calcWeeklySentTransfersClosed(actLog,agent.id),        color:"#a78bfa" },
+                        { label:"Received Transfers Closed", value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),    color:"#f59e0b" },
+                        { label:"MA Sales",                  value:calcWeeklyOwnSales(actLog,agent.id),                   color:"#34d399" },
+                        { label:"HIP Sales",                 value:calcWeeklyHospital(actLog,agent.id),                   color:"#f472b6" },
+                      ].map(function(stat){
+                        return (
+                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1px solid "+stat.color+"55",background:stat.color+"15"}}>
+                            <span style={{fontSize:12,fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
+                            <span style={{fontSize:11,fontWeight:600,color:T.muted}}>{stat.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
