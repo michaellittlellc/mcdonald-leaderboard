@@ -94,6 +94,15 @@ const TV_THEMES = {
       { cup:"#38bdf8", shine:"#7dd3fc", shadow:"#0369a1", glow:"#38bdf855", label:"GLACIER", border:"#38bdf866", bg:"linear-gradient(135deg,#000d20,#000d1a)" },
     ],
   },
+  day: {
+    label:"Day", animated:false,
+    bg:"#f0f4ff", card:"#ffffff", border:"#bfcfe8", text:"#0f172a", muted:"#64748b", accent:"#2563eb",
+    top3:[
+      { cup:"#b45309", shine:"#78350f", shadow:"#92400e", glow:"#f59e0b44", label:"GOLD",   border:"#f59e0b99", bg:"linear-gradient(135deg,#fef9c3,#fef3c7)" },
+      { cup:"#475569", shine:"#1e293b", shadow:"#334155", glow:"#94a3b844", label:"SILVER", border:"#94a3b899", bg:"linear-gradient(135deg,#f1f5f9,#e2e8f0)" },
+      { cup:"#7c4a1e", shine:"#92400e", shadow:"#6b3a16", glow:"#c2773a44", label:"BRONZE", border:"#c2773a99", bg:"linear-gradient(135deg,#fde8d0,#fddbb4)" },
+    ],
+  },
 };
 
 const BADGE_ICONS = {
@@ -790,7 +799,7 @@ export default function App() {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <div>
               <div style={{fontSize:13,letterSpacing:6,color:TV.accent,fontWeight:700}}>McDONALD GROUP</div>
-              <div style={{fontSize:32,fontWeight:900,background:"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
+              <div style={{fontSize:32,fontWeight:900,background:tvTheme==="day"?"linear-gradient(135deg,#b45309,#d97706,#0f172a)":"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
             </div>
             <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans}].map(function(s){
