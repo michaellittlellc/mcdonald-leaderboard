@@ -8,7 +8,7 @@ import {
 const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
-const POINT_VALUES = { transfer:1, sold_transfer:1, closed_transfer:2, own_sale:3, hospital_sale:2 };
+const POINT_VALUES = { transfer:1, sold_transfer:1, closed_transfer:2, own_sale:3, hospital_sale:3, rewrite:1.5 };
 
 const ADMIN_MANAGERS = [
   { id:"mgr-tee",     name:"Tee Adams",      role:"Manager", isAdminManager:true },
@@ -187,9 +187,9 @@ function getWeeklyVerse() {
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 }
 
-function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3 + (s.hospital_sale||0)*2; }
+function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*2 + s.own_sale*3 + (s.hospital_sale||0)*3 + (s.rewrite||0)*1.5; }
 function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale + (s.hospital_sale||0); }
-function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0, hospital_sale:0 }; }
+function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0, hospital_sale:0, rewrite:0 }; }
 
 function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
@@ -807,16 +807,19 @@ export default function App() {
     .map(function(a){ return Object.assign({},a,{points:calcPoints(a.stats),apps:calcApps(a.stats)}); })
     .sort(function(a,b){ return b.points-a.points; });
 
-  var totPts   = ranked.reduce(function(s,a){ return s+a.points; }, 0);
-  var totApps  = ranked.reduce(function(s,a){ return s+a.apps; }, 0);
-  var totTrans = ranked.reduce(function(s,a){ return s+a.stats.transfer; }, 0);
+  var totPts      = ranked.reduce(function(s,a){ return s+a.points; }, 0);
+  var totApps     = ranked.reduce(function(s,a){ return s+a.apps; }, 0);
+  var totTrans    = ranked.reduce(function(s,a){ return s+a.stats.transfer; }, 0);
+  var totWeekApps = ranked.reduce(function(s,a){ return s + calcWeeklyReceivedTransfersClosed(actLog,a.id) + calcWeeklyOwnSales(actLog,a.id); }, 0);
+  var totWeekHips = ranked.reduce(function(s,a){ return s + calcWeeklyHospital(actLog,a.id); }, 0);
 
   var actTypes = [
     {type:"transfer",        label:"Sent Transfer",        color:"#3b82f6", pts:1},
     {type:"sold_transfer",   label:"Sent & Closed",        color:"#8b5cf6", pts:1},
     {type:"closed_transfer", label:"Received & Closed",    color:"#f59e0b", pts:2},
     {type:"own_sale",        label:"Own Sale",              color:"#10b981", pts:3},
-    {type:"hospital_sale",   label:"Hospital Indemnity",   color:"#ec4899", pts:2},
+    {type:"hospital_sale",   label:"Hospital Indemnity",   color:"#ec4899", pts:3},
+    {type:"rewrite",         label:"ReWrite",               color:"#f97316", pts:1.5},
   ];
 
   function fmtTime(ts) {
@@ -861,9 +864,9 @@ export default function App() {
               <div style={{fontSize:32,fontWeight:900,background:tvTheme==="day"?"linear-gradient(135deg,#b45309,#d97706,#0f172a)":"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
             </div>
             <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-              {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans}].map(function(s){
+              {[{label:"TRANSFERS",value:totTrans},{label:"APPS",value:totWeekApps},{label:"HIPS",value:totWeekHips}].map(function(s){
                 return (
-                  <div key={s.label} style={{textAlign:"center",background:TV.card,border:"1px solid "+TV.border,borderRadius:12,padding:"10px 20px"}}>
+                  <div key={s.label} style={{flex:"1 1 140px",minWidth:140,textAlign:"center",background:TV.card,border:"1px solid "+TV.border,borderRadius:12,padding:"10px 24px"}}>
                     <div style={{fontSize:28,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
                     <div style={{fontSize:10,letterSpacing:2,color:TV.muted,marginTop:4,fontWeight:700}}>{s.label}</div>
                   </div>
@@ -921,26 +924,23 @@ export default function App() {
                     <div style={{height:7,background:TV.border,borderRadius:4,overflow:"hidden",marginBottom:7}}>
                       <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
                     </div>
-                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                       {[
-                        { label:"Transfers",                  value:calcWeeklyTransfers(actLog,agent.id),                   color:"#60a5fa" },
-                        { label:"Sent Transfers Closed",      value:calcWeeklySentTransfersClosed(actLog,agent.id),         color:"#a78bfa" },
-                        { label:"Received Transfers Closed",  value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),     color:"#f59e0b" },
-                        { label:"MA Sales",                   value:calcWeeklyOwnSales(actLog,agent.id),                    color:"#34d399" },
-                        { label:"HIP Sales",                  value:calcWeeklyHospital(actLog,agent.id),                    color:"#f472b6" },
+                        { label:"Transfers",   value:calcWeeklyTransfers(actLog,agent.id),               color:"#60a5fa" },
+                        { label:"Sent Closed", value:calcWeeklySentTransfersClosed(actLog,agent.id),     color:"#a78bfa" },
+                        { label:"Recv Closed", value:calcWeeklyReceivedTransfersClosed(actLog,agent.id), color:"#f59e0b" },
+                        { label:"MA Sales",    value:calcWeeklyOwnSales(actLog,agent.id),                color:"#34d399" },
+                        { label:"HIP Sales",   value:calcWeeklyHospital(actLog,agent.id),                color:"#f472b6" },
+                        { label:"ReWrite",     value:agent.stats.rewrite||0,                             color:"#f97316" },
                       ].map(function(stat){
                         return (
-                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"4px 12px",borderRadius:20,border:"1px solid "+stat.color+"55",background:stat.color+"15"}}>
-                            <span style={{fontSize:"clamp(13px,1.3vw,17px)",fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
-                            <span style={{fontSize:"clamp(10px,0.95vw,13px)",fontWeight:600,color:TV.muted}}>{stat.label}</span>
+                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:7,padding:"6px 16px",borderRadius:20,border:"1px solid "+stat.color+"77",background:stat.color+"25"}}>
+                            <span style={{fontSize:"clamp(18px,2vw,26px)",fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
+                            <span style={{fontSize:"clamp(11px,1.1vw,15px)",fontWeight:700,color:TV.muted}}>{stat.label}</span>
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,minWidth:80}}>
-                    <span style={{fontSize:isTop3?44:38,fontWeight:900,color:isTop3?tc.cup:TV.accent,lineHeight:1}}>{agent.points}</span>
-                    <span style={{fontSize:11,color:TV.muted,letterSpacing:2,fontWeight:700}}>PTS</span>
                   </div>
                 </div>
               );
@@ -1042,9 +1042,9 @@ export default function App() {
 
       {/* STATS BAR */}
       <div style={{display:"flex",gap:12,padding:"14px 24px",flexWrap:"wrap"}}>
-        {[{label:"TOTAL POINTS",value:totPts},{label:"APPS WRITTEN",value:totApps},{label:"TRANSFERS",value:totTrans},{label:"ACTIVE AGENTS",value:agents.length}].map(function(s){
+        {[{label:"TRANSFERS",value:totTrans},{label:"APPS",value:totWeekApps},{label:"HIPS",value:totWeekHips},{label:"ACTIVE AGENTS",value:agents.length}].map(function(s){
           return (
-            <div key={s.label} style={{flex:"1 1 110px",background:T.cardBg,border:"1px solid "+T.border,borderRadius:10,padding:"10px 14px",textAlign:"center"}}>
+            <div key={s.label} style={{flex:"1 1 140px",minWidth:140,background:T.cardBg,border:"1px solid "+T.border,borderRadius:10,padding:"10px 18px",textAlign:"center"}}>
               <div style={{fontSize:26,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
               <div style={{fontSize:10,letterSpacing:2,color:T.muted,marginTop:4,fontWeight:700}}>{s.label}</div>
             </div>
@@ -1056,7 +1056,7 @@ export default function App() {
       {view==="board" && (
         <div style={S.content}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
-            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:1,color:"#a78bfa"},{label:"Received & Closed",pts:2,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:2,color:"#ec4899"}].map(function(item){
+            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:1,color:"#a78bfa"},{label:"Received & Closed",pts:2,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:3,color:"#ec4899"},{label:"ReWrite",pts:1.5,color:"#f97316"}].map(function(item){
               return (
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:6,background:T.cardBg,border:"1px solid "+T.border,borderRadius:20,padding:"5px 12px"}}>
                   <div style={{width:8,height:8,borderRadius:"50%",background:item.color}}/>
@@ -1106,26 +1106,23 @@ export default function App() {
                     <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:7}}>
                       <div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,#2563eb,#60a5fa)"}}/>
                     </div>
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       {[
                         { label:"Transfers",                 value:calcWeeklyTransfers(actLog,agent.id),                  color:"#60a5fa" },
-                        { label:"Sent Transfers Closed",     value:calcWeeklySentTransfersClosed(actLog,agent.id),        color:"#a78bfa" },
-                        { label:"Received Transfers Closed", value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),    color:"#f59e0b" },
+                        { label:"Sent Closed",               value:calcWeeklySentTransfersClosed(actLog,agent.id),        color:"#a78bfa" },
+                        { label:"Recv Closed",               value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),    color:"#f59e0b" },
                         { label:"MA Sales",                  value:calcWeeklyOwnSales(actLog,agent.id),                   color:"#34d399" },
                         { label:"HIP Sales",                 value:calcWeeklyHospital(actLog,agent.id),                   color:"#f472b6" },
+                        { label:"ReWrite",                   value:agent.stats.rewrite||0,                                color:"#f97316" },
                       ].map(function(stat){
                         return (
-                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:20,border:"1px solid "+stat.color+"55",background:stat.color+"15"}}>
-                            <span style={{fontSize:12,fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
-                            <span style={{fontSize:11,fontWeight:600,color:T.muted}}>{stat.label}</span>
+                          <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,border:"1px solid "+stat.color+"66",background:stat.color+"20"}}>
+                            <span style={{fontSize:18,fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
+                            <span style={{fontSize:12,fontWeight:700,color:T.muted}}>{stat.label}</span>
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
-                    <span style={{fontSize:isTop3?36:32,fontWeight:900,color:isTop3?tc.cup:"#60a5fa",lineHeight:1}}>{agent.points}</span>
-                    <span style={{fontSize:10,color:T.muted,letterSpacing:2,fontWeight:700}}>PTS</span>
                   </div>
                 </div>
               );
@@ -1165,6 +1162,7 @@ export default function App() {
                     <span>{agent.stats.closed_transfer} r&c</span>
                     <span>{agent.stats.own_sale} own</span>
                     {(agent.stats.hospital_sale||0) > 0 && <span>{agent.stats.hospital_sale} hosp</span>}
+                    {(agent.stats.rewrite||0) > 0 && <span>{agent.stats.rewrite} rewrite</span>}
                   </div>
                 </div>
               );
@@ -1251,6 +1249,7 @@ export default function App() {
                       <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f59e0b22",color:"#f59e0b",fontWeight:700}}>{agent.stats.closed_transfer} Received & Closed</div>
                       <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#10b98122",color:"#34d399",fontWeight:700}}>{agent.stats.own_sale} Own Sales</div>
                       {(agent.stats.hospital_sale||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#ec489922",color:"#ec4899",fontWeight:700}}>{agent.stats.hospital_sale} Hospital</div>}
+                      {(agent.stats.rewrite||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f9741622",color:"#f97316",fontWeight:700}}>{agent.stats.rewrite} ReWrite</div>}
                       <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#34d39922",color:"#34d399",fontWeight:800}}>{agent.apps} Total Apps</div>
                     </div>
                   </div>
