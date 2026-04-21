@@ -8,7 +8,7 @@ import {
 const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
-const POINT_VALUES = { transfer:1, sold_transfer:1, closed_transfer:3, own_sale:3, hospital_sale:3, rewrite:1.5 };
+const POINT_VALUES = { transfer:1, sold_transfer:2, closed_transfer:3, own_sale:3, hospital_sale:3, rewrite:1.5 };
 
 const ADMIN_MANAGERS = [
   { id:"mgr-tee",     name:"Tee Adams",      role:"Manager", isAdminManager:true },
@@ -187,7 +187,7 @@ function getWeeklyVerse() {
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 }
 
-function calcPoints(s) { return s.transfer*1 + s.sold_transfer*1 + s.closed_transfer*3 + s.own_sale*3 + (s.hospital_sale||0)*3 + (s.rewrite||0)*1.5; }
+function calcPoints(s) { return s.transfer*1 + s.sold_transfer*2 + s.closed_transfer*3 + s.own_sale*3 + (s.hospital_sale||0)*3 + (s.rewrite||0)*1.5; }
 function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale + (s.hospital_sale||0); }
 function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0, hospital_sale:0, rewrite:0 }; }
 
@@ -815,7 +815,7 @@ export default function App() {
 
   var actTypes = [
     {type:"transfer",        label:"Sent Transfer",        color:"#3b82f6", pts:1},
-    {type:"sold_transfer",   label:"Sent & Closed",        color:"#8b5cf6", pts:1},
+    {type:"sold_transfer",   label:"Sent & Closed",        color:"#8b5cf6", pts:2},
     {type:"closed_transfer", label:"Received & Closed",    color:"#f59e0b", pts:3},
     {type:"own_sale",        label:"Own Sale",              color:"#10b981", pts:3},
     {type:"hospital_sale",   label:"Hospital Indemnity",   color:"#ec4899", pts:3},
@@ -1056,7 +1056,7 @@ export default function App() {
       {view==="board" && (
         <div style={S.content}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
-            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:1,color:"#a78bfa"},{label:"Received & Closed",pts:3,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:3,color:"#ec4899"},{label:"ReWrite",pts:1.5,color:"#f97316"}].map(function(item){
+            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:2,color:"#a78bfa"},{label:"Received & Closed",pts:3,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:3,color:"#ec4899"},{label:"ReWrite",pts:1.5,color:"#f97316"}].map(function(item){
               return (
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:6,background:T.cardBg,border:"1px solid "+T.border,borderRadius:20,padding:"5px 12px"}}>
                   <div style={{width:8,height:8,borderRadius:"50%",background:item.color}}/>
