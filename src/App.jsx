@@ -8,7 +8,7 @@ import {
 const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
-const POINT_VALUES = { transfer:1, sold_transfer:2, closed_transfer:3, own_sale:3, hospital_sale:3, rewrite:1.5 };
+const POINT_VALUES = { transfer:1, qualified_transfer:2, sold_transfer:1, sold_qualified_transfer:1, closed_transfer:3, closed_qualified_transfer:2, own_sale:3, hospital_sale:3, rewrite:1.5 };
 
 const ADMIN_MANAGERS = [
   { id:"mgr-tee",     name:"Tee Adams",      role:"Manager", isAdminManager:true },
@@ -120,7 +120,7 @@ const BADGES = [
   { id:"first_sale",    label:"First Sale",      icon:BADGE_ICONS.first_sale,    condition: function(s,pts,tdp,wk){ return s.own_sale >= 1; } },
   { id:"ten_transfers", label:"10 Transfers",    icon:BADGE_ICONS.ten_transfers, condition: function(s,pts,tdp,wk){ return s.transfer >= 10; } },
   { id:"hat_trick",     label:"Hat Trick",       icon:BADGE_ICONS.hat_trick,     condition: function(s,pts,tdp,wk){ return s.own_sale >= 3; } },
-  { id:"closer",        label:"Closer",          icon:BADGE_ICONS.closer,        condition: function(s,pts,tdp,wk){ return (s.sold_transfer+s.closed_transfer) >= 5; } },
+  { id:"closer",        label:"Closer",          icon:BADGE_ICONS.closer,        condition: function(s,pts,tdp,wk){ return (s.sold_transfer+(s.sold_qualified_transfer||0)+s.closed_transfer+(s.closed_qualified_transfer||0)) >= 5; } },
   { id:"mvp",           label:"25 Points",       icon:BADGE_ICONS.mvp,           condition: function(s,pts,tdp,wk){ return pts >= 25; } },
   { id:"on_fire",       label:"On Fire",         icon:BADGE_ICONS.on_fire,       condition: function(s,pts,tdp,wk){ return pts >= 15 || tdp >= 6; } },
   { id:"doctor",        label:"Doctor",          icon:BADGE_ICONS.doctor,        condition: function(s,pts,tdp,wk){ return (wk||0) >= 3; } },
@@ -187,9 +187,9 @@ function getWeeklyVerse() {
   return BIBLE_VERSES[weekNum % BIBLE_VERSES.length];
 }
 
-function calcPoints(s) { return s.transfer*1 + s.sold_transfer*2 + s.closed_transfer*3 + s.own_sale*3 + (s.hospital_sale||0)*3 + (s.rewrite||0)*1.5; }
-function calcApps(s)   { return s.sold_transfer + s.closed_transfer + s.own_sale + (s.hospital_sale||0); }
-function initStats()   { return { transfer:0, sold_transfer:0, closed_transfer:0, own_sale:0, hospital_sale:0, rewrite:0 }; }
+function calcPoints(s) { return s.transfer*1 + (s.qualified_transfer||0)*2 + s.sold_transfer*1 + (s.sold_qualified_transfer||0)*1 + s.closed_transfer*3 + (s.closed_qualified_transfer||0)*2 + s.own_sale*3 + (s.hospital_sale||0)*3 + (s.rewrite||0)*1.5; }
+function calcApps(s)   { return s.sold_transfer + (s.sold_qualified_transfer||0) + s.closed_transfer + (s.closed_qualified_transfer||0) + s.own_sale + (s.hospital_sale||0); }
+function initStats()   { return { transfer:0, qualified_transfer:0, sold_transfer:0, sold_qualified_transfer:0, closed_transfer:0, closed_qualified_transfer:0, own_sale:0, hospital_sale:0, rewrite:0 }; }
 
 function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
@@ -200,7 +200,7 @@ function calcWeeklyApps(actLog, agentId) {
   return actLog.filter(function(e) {
     var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
     return e.agentId === agentId &&
-      (e.type === "own_sale" || e.type === "sold_transfer" || e.type === "closed_transfer") &&
+      (e.type === "own_sale" || e.type === "sold_transfer" || e.type === "sold_qualified_transfer" || e.type === "closed_transfer" || e.type === "closed_qualified_transfer") &&
       t >= monday;
   }).length;
 }
@@ -229,6 +229,18 @@ function calcWeeklyTransfers(actLog, agentId) {
   }).length;
 }
 
+function calcWeeklyQualifiedTransfers(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "qualified_transfer" && t >= monday;
+  }).length;
+}
+
 function calcWeeklySentTransfersClosed(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
@@ -241,6 +253,18 @@ function calcWeeklySentTransfersClosed(actLog, agentId) {
   }).length;
 }
 
+function calcWeeklySentQualifiedTransfersClosed(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "sold_qualified_transfer" && t >= monday;
+  }).length;
+}
+
 function calcWeeklyReceivedTransfersClosed(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
@@ -250,6 +274,18 @@ function calcWeeklyReceivedTransfersClosed(actLog, agentId) {
   return actLog.filter(function(e) {
     var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
     return e.agentId === agentId && e.type === "closed_transfer" && t >= monday;
+  }).length;
+}
+
+function calcWeeklyReceivedQualifiedTransfersClosed(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "closed_qualified_transfer" && t >= monday;
   }).length;
 }
 
@@ -485,7 +521,7 @@ function Confetti({ active, tvTheme }) {
 
 function CelebrationBanner({ celebration, tvTheme }) {
   if (!celebration) return null;
-  var msg = celebration.type === "own_sale" ? "OWN SALE!" : celebration.type === "sold_transfer" ? "SENT & CLOSED!" : "BADGE EARNED!";
+  var msg = celebration.type === "own_sale" ? "OWN SALE!" : celebration.type === "sold_transfer" ? "SENT CLOSED!" : celebration.type === "sold_qualified_transfer" ? "SENT Q CLOSED!" : celebration.type === "closed_qualified_transfer" ? "RECV Q CLOSED!" : "BADGE EARNED!";
   return (
     React.createElement("div", { style:{position:"fixed",inset:0,zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"} },
       React.createElement("div", { style:{textAlign:"center",animation:"celebIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards"} },
@@ -722,7 +758,7 @@ export default function App() {
     await addDoc(collection(db,"activityLog"),{
       time:serverTimestamp(), agentId:agentId, agentName:agent&&agent.name, type:type, by:currentUser.name
     });
-    var shouldCelebrate = type==="sold_transfer" || type==="own_sale" || type==="hospital_sale";
+    var shouldCelebrate = type==="sold_transfer" || type==="sold_qualified_transfer" || type==="closed_qualified_transfer" || type==="own_sale" || type==="hospital_sale";
     var milestone = BADGES.find(function(b){ return b.condition(newStat,newPts,newTdp,getWeeklyHospital(agentId)) && !b.condition(prev,prevPts,prevTdp,getWeeklyHospital(agentId)); });
     if(shouldCelebrate || milestone){
       var celebType = shouldCelebrate ? type : "badge";
@@ -814,12 +850,15 @@ export default function App() {
   var totWeekHips = ranked.reduce(function(s,a){ return s + calcWeeklyHospital(actLog,a.id); }, 0);
 
   var actTypes = [
-    {type:"transfer",        label:"Sent Transfer",        color:"#3b82f6", pts:1},
-    {type:"sold_transfer",   label:"Sent & Closed",        color:"#8b5cf6", pts:2},
-    {type:"closed_transfer", label:"Received & Closed",    color:"#f59e0b", pts:3},
-    {type:"own_sale",        label:"Own Sale",              color:"#10b981", pts:3},
-    {type:"hospital_sale",   label:"Hospital Indemnity",   color:"#ec4899", pts:3},
-    {type:"rewrite",         label:"ReWrite",               color:"#f97316", pts:1.5},
+    {type:"transfer",                  label:"Transfer",                        color:"#3b82f6", pts:1},
+    {type:"qualified_transfer",        label:"Qualified Transfer",              color:"#06b6d4", pts:2},
+    {type:"sold_transfer",             label:"Sent Transfer Closed",            color:"#8b5cf6", pts:1},
+    {type:"sold_qualified_transfer",   label:"Sent Qualified Transfer Closed",  color:"#a855f7", pts:1},
+    {type:"closed_transfer",           label:"Received Transfer Closed",        color:"#f59e0b", pts:3},
+    {type:"closed_qualified_transfer", label:"Received Qualified Transfer Closed", color:"#f97316", pts:2},
+    {type:"own_sale",                  label:"Own Sale",                        color:"#10b981", pts:3},
+    {type:"hospital_sale",             label:"Hospital Indemnity",              color:"#ec4899", pts:3},
+    {type:"rewrite",                   label:"ReWrite",                         color:"#e11d48", pts:1.5},
   ];
 
   function fmtTime(ts) {
@@ -926,12 +965,15 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                       {[
-                        { label:"Transfers",   value:calcWeeklyTransfers(actLog,agent.id),               color:"#60a5fa" },
-                        { label:"Sent Closed", value:calcWeeklySentTransfersClosed(actLog,agent.id),     color:"#a78bfa" },
-                        { label:"Recv Closed", value:calcWeeklyReceivedTransfersClosed(actLog,agent.id), color:"#f59e0b" },
-                        { label:"MA Sales",    value:calcWeeklyOwnSales(actLog,agent.id),                color:"#34d399" },
-                        { label:"HIP Sales",   value:calcWeeklyHospital(actLog,agent.id),                color:"#f472b6" },
-                        { label:"ReWrite",     value:agent.stats.rewrite||0,                             color:"#f97316" },
+                        { label:"Transfer",       value:calcWeeklyTransfers(actLog,agent.id),                        color:"#3b82f6" },
+                        { label:"Qualified Transfer",  value:calcWeeklyQualifiedTransfers(actLog,agent.id),               color:"#06b6d4" },
+                        { label:"Sent Closed",    value:calcWeeklySentTransfersClosed(actLog,agent.id),              color:"#8b5cf6" },
+                        { label:"Sent QT Closed",  value:calcWeeklySentQualifiedTransfersClosed(actLog,agent.id),     color:"#a855f7" },
+                        { label:"Received T Closed",    value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),          color:"#f59e0b" },
+                        { label:"Received QT Closed",  value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
+                        { label:"Own Sales",       value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
+                        { label:"HIP Sales",      value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
+                        { label:"ReWrite",        value:agent.stats.rewrite||0,                                      color:"#e11d48" },
                       ].map(function(stat){
                         return (
                           <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:7,padding:"6px 16px",borderRadius:20,border:"1px solid "+stat.color+"77",background:stat.color+"25"}}>
@@ -1056,7 +1098,7 @@ export default function App() {
       {view==="board" && (
         <div style={S.content}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
-            {[{label:"Sent Transfer",pts:1,color:"#60a5fa"},{label:"Sent & Closed",pts:2,color:"#a78bfa"},{label:"Received & Closed",pts:3,color:"#f59e0b"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:3,color:"#ec4899"},{label:"ReWrite",pts:1.5,color:"#f97316"}].map(function(item){
+            {[{label:"Transfer",pts:1,color:"#3b82f6"},{label:"Qualified Transfer",pts:2,color:"#06b6d4"},{label:"Sent Transfer Closed",pts:1,color:"#8b5cf6"},{label:"Sent Qualified Transfer Closed",pts:1,color:"#a855f7"},{label:"Received Transfer Closed",pts:3,color:"#f59e0b"},{label:"Received Qualified Transfer Closed",pts:2,color:"#f97316"},{label:"Own Sale",pts:3,color:"#34d399"},{label:"Hospital Indemnity",pts:3,color:"#ec4899"},{label:"ReWrite",pts:1.5,color:"#e11d48"}].map(function(item){
               return (
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:6,background:T.cardBg,border:"1px solid "+T.border,borderRadius:20,padding:"5px 12px"}}>
                   <div style={{width:8,height:8,borderRadius:"50%",background:item.color}}/>
@@ -1108,12 +1150,15 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       {[
-                        { label:"Transfers",                 value:calcWeeklyTransfers(actLog,agent.id),                  color:"#60a5fa" },
-                        { label:"Sent Closed",               value:calcWeeklySentTransfersClosed(actLog,agent.id),        color:"#a78bfa" },
-                        { label:"Recv Closed",               value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),    color:"#f59e0b" },
-                        { label:"MA Sales",                  value:calcWeeklyOwnSales(actLog,agent.id),                   color:"#34d399" },
-                        { label:"HIP Sales",                 value:calcWeeklyHospital(actLog,agent.id),                   color:"#f472b6" },
-                        { label:"ReWrite",                   value:agent.stats.rewrite||0,                                color:"#f97316" },
+                        { label:"Transfer",       value:calcWeeklyTransfers(actLog,agent.id),                        color:"#3b82f6" },
+                        { label:"Qualified Transfer",  value:calcWeeklyQualifiedTransfers(actLog,agent.id),               color:"#06b6d4" },
+                        { label:"Sent Closed",    value:calcWeeklySentTransfersClosed(actLog,agent.id),              color:"#8b5cf6" },
+                        { label:"Sent QT Closed",  value:calcWeeklySentQualifiedTransfersClosed(actLog,agent.id),     color:"#a855f7" },
+                        { label:"Received T Closed",    value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),          color:"#f59e0b" },
+                        { label:"Received QT Closed",  value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
+                        { label:"Own Sales",       value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
+                        { label:"HIP Sales",      value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
+                        { label:"ReWrite",        value:agent.stats.rewrite||0,                                      color:"#e11d48" },
                       ].map(function(stat){
                         return (
                           <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,border:"1px solid "+stat.color+"66",background:stat.color+"20"}}>
@@ -1157,9 +1202,12 @@ export default function App() {
                     })}
                   </div>
                   <div style={{display:"flex",gap:8,fontSize:11,color:T.muted,flexWrap:"wrap"}}>
-                    <span>{agent.stats.transfer} sent</span>
-                    <span>{agent.stats.sold_transfer} s&c</span>
-                    <span>{agent.stats.closed_transfer} r&c</span>
+                    <span>{agent.stats.transfer} xfer</span>
+                    {(agent.stats.qualified_transfer||0) > 0 && <span>{agent.stats.qualified_transfer} qual</span>}
+                    <span>{agent.stats.sold_transfer} sent cls</span>
+                    {(agent.stats.sold_qualified_transfer||0) > 0 && <span>{agent.stats.sold_qualified_transfer} sent q cls</span>}
+                    <span>{agent.stats.closed_transfer} recv cls</span>
+                    {(agent.stats.closed_qualified_transfer||0) > 0 && <span>{agent.stats.closed_qualified_transfer} recv q cls</span>}
                     <span>{agent.stats.own_sale} own</span>
                     {(agent.stats.hospital_sale||0) > 0 && <span>{agent.stats.hospital_sale} hosp</span>}
                     {(agent.stats.rewrite||0) > 0 && <span>{agent.stats.rewrite} rewrite</span>}
@@ -1245,8 +1293,11 @@ export default function App() {
                     <div style={{fontSize:15,fontWeight:800,color:T.text,marginBottom:8}}>{agent.name}</div>
                     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#3b82f622",color:"#60a5fa",fontWeight:700}}>{agent.stats.transfer} Transfers</div>
-                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#8b5cf622",color:"#a78bfa",fontWeight:700}}>{agent.stats.sold_transfer} Sent & Closed</div>
-                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f59e0b22",color:"#f59e0b",fontWeight:700}}>{agent.stats.closed_transfer} Received & Closed</div>
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#8b5cf622",color:"#a78bfa",fontWeight:700}}>{agent.stats.sold_transfer} Sent Closed</div>
+                      {(agent.stats.sold_qualified_transfer||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#a855f722",color:"#a855f7",fontWeight:700}}>{agent.stats.sold_qualified_transfer} Sent Q Closed</div>}
+                      <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f59e0b22",color:"#f59e0b",fontWeight:700}}>{agent.stats.closed_transfer} Recv Closed</div>
+                      {(agent.stats.closed_qualified_transfer||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f9741622",color:"#f97316",fontWeight:700}}>{agent.stats.closed_qualified_transfer} Recv Q Closed</div>}
+                      {(agent.stats.qualified_transfer||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#06b6d422",color:"#06b6d4",fontWeight:700}}>{agent.stats.qualified_transfer} Qual Transfer</div>}
                       <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#10b98122",color:"#34d399",fontWeight:700}}>{agent.stats.own_sale} Own Sales</div>
                       {(agent.stats.hospital_sale||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#ec489922",color:"#ec4899",fontWeight:700}}>{agent.stats.hospital_sale} Hospital</div>}
                       {(agent.stats.rewrite||0) > 0 && <div style={{fontSize:12,padding:"4px 10px",borderRadius:10,background:"#f9741622",color:"#f97316",fontWeight:700}}>{agent.stats.rewrite} ReWrite</div>}
