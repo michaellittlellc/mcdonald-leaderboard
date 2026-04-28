@@ -846,7 +846,7 @@ export default function App() {
   var totPts      = ranked.reduce(function(s,a){ return s+a.points; }, 0);
   var totApps     = ranked.reduce(function(s,a){ return s+a.apps; }, 0);
   var totTrans    = ranked.reduce(function(s,a){ return s+a.stats.transfer; }, 0);
-  var totWeekApps = ranked.reduce(function(s,a){ return s + calcWeeklyReceivedTransfersClosed(actLog,a.id) + calcWeeklyOwnSales(actLog,a.id); }, 0);
+  var totWeekApps = ranked.reduce(function(s,a){ return s + calcWeeklyReceivedTransfersClosed(actLog,a.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,a.id) + calcWeeklyOwnSales(actLog,a.id); }, 0);
   var totWeekHips = ranked.reduce(function(s,a){ return s + calcWeeklyHospital(actLog,a.id); }, 0);
 
   var actTypes = [
