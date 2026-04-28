@@ -9,7 +9,7 @@ const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
 const POINT_VALUES = { transfer:1, qualified_transfer:2, sold_transfer:1, sold_qualified_transfer:1, closed_transfer:3, closed_qualified_transfer:2, own_sale:3, hospital_sale:3, rewrite:1.5 };
-const APP_TRACKER_IDS = [1, 2, 3, 5]; // Destiny, Hailie, Kaitlin, Layla
+const APP_TRACKER_IDS = []; // Destiny, Hailie, Kaitlin, Layla — set to [1,2,3,5] to re-enable
 const APP_TARGET_MIN    = 6;
 const APP_TARGET_FRIDAY = 10;
 
