@@ -23,7 +23,6 @@ const AGENTS_DEFAULT = [
   { id:4,  name:"Edith Spradley",    role:"Agent" },
   { id:5,  name:"Layla Finch",       role:"Agent" },
   { id:6,  name:"Abbie Sanders",     role:"Agent" },
-  { id:7,  name:"Beth",              role:"Agent" },
   { id:8,  name:"Christian Kanupke", role:"Agent" },
   { id:9,  name:"Austin Oblow",      role:"Agent" },
   { id:10, name:"Chipper Wiley",     role:"Agent" },
