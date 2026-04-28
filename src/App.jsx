@@ -1084,7 +1084,7 @@ export default function App() {
 
       {/* STATS BAR */}
       <div style={{display:"flex",gap:12,padding:"14px 24px",flexWrap:"wrap"}}>
-        {[{label:"TRANSFERS",value:totTrans},{label:"APPS",value:totWeekApps},{label:"HIPS",value:totWeekHips},{label:"ACTIVE AGENTS",value:agents.length}].map(function(s){
+        {[{label:"TRANSFERS",value:totTrans},{label:"APPS",value:totWeekApps},{label:"HIPS",value:totWeekHips}].map(function(s){
           return (
             <div key={s.label} style={{flex:"1 1 140px",minWidth:140,background:T.cardBg,border:"1px solid "+T.border,borderRadius:10,padding:"10px 18px",textAlign:"center"}}>
               <div style={{fontSize:26,fontWeight:900,color:"#f59e0b",lineHeight:1}}>{s.value}</div>
