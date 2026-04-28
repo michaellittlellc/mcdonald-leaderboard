@@ -9,6 +9,9 @@ const DEFAULT_PASSWORD  = "Password123!";
 const MANAGER_PASSWORD  = "Mcdonald123!";
 const PRIZE_RESTRICTED_IDS = [10, 9, 12, 8];
 const POINT_VALUES = { transfer:1, qualified_transfer:2, sold_transfer:1, sold_qualified_transfer:1, closed_transfer:3, closed_qualified_transfer:2, own_sale:3, hospital_sale:3, rewrite:1.5 };
+const APP_TRACKER_IDS = [1, 2, 3, 5]; // Destiny, Hailie, Kaitlin, Layla
+const APP_TARGET_MIN    = 6;
+const APP_TARGET_FRIDAY = 10;
 
 const ADMIN_MANAGERS = [
   { id:"mgr-tee",     name:"Tee Adams",      role:"Manager", isAdminManager:true },
@@ -940,6 +943,10 @@ export default function App() {
               var isTop3=idx<3;
               var tc=isTop3?TV.top3[idx]:null;
               var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
+              var tvShowTracker = APP_TRACKER_IDS.indexOf(agent.id) !== -1;
+              var tvTrackerApps = tvShowTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
+              var tvUntilMin    = Math.max(0, APP_TARGET_MIN - tvTrackerApps);
+              var tvUntilFriday = Math.max(0, APP_TARGET_FRIDAY - tvTrackerApps);
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"12px 24px",background:isTop3?tc.bg:TV.card,border:isTop3?"1px solid "+tc.border:"1px solid "+TV.border,boxShadow:isTop3?"0 0 24px "+tc.glow:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
@@ -983,6 +990,24 @@ export default function App() {
                       })}
                     </div>
                   </div>
+                  {tvShowTracker && (
+                    <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8,alignSelf:"flex-start",borderLeft:"1px solid "+TV.border,paddingLeft:16,minWidth:170}}>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:"clamp(8px,0.8vw,10px)",letterSpacing:1,fontWeight:700,color:TV.muted,marginBottom:2}}>MINIMUM</div>
+                        <div style={{display:"flex",alignItems:"baseline",gap:5,justifyContent:"flex-end"}}>
+                          <span style={{fontSize:"clamp(22px,2.4vw,32px)",fontWeight:900,lineHeight:1,color:tvUntilMin===0?"#34d399":"#f59e0b"}}>{tvUntilMin===0?"✓":tvUntilMin}</span>
+                          {tvUntilMin > 0 && <span style={{fontSize:"clamp(10px,0.9vw,12px)",color:TV.muted,fontWeight:600}}>to go</span>}
+                        </div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:"clamp(8px,0.8vw,10px)",letterSpacing:1,fontWeight:700,color:TV.muted,marginBottom:2}}>FRIDAY PAID OFF</div>
+                        <div style={{display:"flex",alignItems:"baseline",gap:5,justifyContent:"flex-end"}}>
+                          <span style={{fontSize:"clamp(22px,2.4vw,32px)",fontWeight:900,lineHeight:1,color:tvUntilFriday===0?"#34d399":"#60a5fa"}}>{tvUntilFriday===0?"✓":tvUntilFriday}</span>
+                          {tvUntilFriday > 0 && <span style={{fontSize:"clamp(10px,0.9vw,12px)",color:TV.muted,fontWeight:600}}>to go</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1116,6 +1141,10 @@ export default function App() {
               var tc=TROPHY_COLORS[theme][idx];
               var isTop3=idx<3;
               var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
+              var showTracker = APP_TRACKER_IDS.indexOf(agent.id) !== -1;
+              var trackerApps = showTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
+              var untilMin    = Math.max(0, APP_TARGET_MIN - trackerApps);
+              var untilFriday = Math.max(0, APP_TARGET_FRIDAY - trackerApps);
               var rowStyle = {
                 display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",transition:"all .3s",
                 background:isTop3?tc.bg:T.cardBg,
@@ -1168,6 +1197,24 @@ export default function App() {
                       })}
                     </div>
                   </div>
+                  {showTracker && (
+                    <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6,borderLeft:"1px solid "+T.border,paddingLeft:14,minWidth:160}}>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:10,letterSpacing:1,fontWeight:700,color:T.muted,marginBottom:2}}>MINIMUM</div>
+                        <div style={{display:"flex",alignItems:"baseline",gap:5,justifyContent:"flex-end"}}>
+                          <span style={{fontSize:28,fontWeight:900,lineHeight:1,color:untilMin===0?"#34d399":"#f59e0b"}}>{untilMin===0?"✓":untilMin}</span>
+                          {untilMin > 0 && <span style={{fontSize:11,color:T.muted,fontWeight:600}}>to go</span>}
+                        </div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:10,letterSpacing:1,fontWeight:700,color:T.muted,marginBottom:2}}>FRIDAY PAID OFF</div>
+                        <div style={{display:"flex",alignItems:"baseline",gap:5,justifyContent:"flex-end"}}>
+                          <span style={{fontSize:28,fontWeight:900,lineHeight:1,color:untilFriday===0?"#34d399":"#60a5fa"}}>{untilFriday===0?"✓":untilFriday}</span>
+                          {untilFriday > 0 && <span style={{fontSize:11,color:T.muted,fontWeight:600}}>to go</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
