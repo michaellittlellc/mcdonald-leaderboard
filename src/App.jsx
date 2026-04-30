@@ -1141,6 +1141,7 @@ export default function App() {
               var tc=TROPHY_COLORS[theme][idx];
               var isTop3=idx<3;
               var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
+              var agentTotalApps = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id);
               var showTracker = APP_TRACKER_IDS.indexOf(agent.id) !== -1;
               var trackerApps = showTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
               var untilMin    = Math.max(0, APP_TARGET_MIN - trackerApps);
@@ -1215,6 +1216,10 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",borderLeft:"1px solid "+T.border,paddingLeft:14,minWidth:70,textAlign:"center"}}>
+                    <div style={{fontSize:36,fontWeight:900,lineHeight:1,color:isTop3?tc.cup:"#60a5fa"}}>{agentTotalApps}</div>
+                    <div style={{fontSize:10,letterSpacing:1,fontWeight:700,color:T.muted,marginTop:3}}>APPS</div>
+                  </div>
                 </div>
               );
             })}
