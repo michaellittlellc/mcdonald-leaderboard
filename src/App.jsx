@@ -947,6 +947,7 @@ export default function App() {
               var tvTrackerApps = tvShowTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
               var tvUntilMin    = Math.max(0, APP_TARGET_MIN - tvTrackerApps);
               var tvUntilFriday = Math.max(0, APP_TARGET_FRIDAY - tvTrackerApps);
+              var tvTotalApps   = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id);
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"12px 24px",background:isTop3?tc.bg:TV.card,border:isTop3?"1px solid "+tc.border:"1px solid "+TV.border,boxShadow:isTop3?"0 0 24px "+tc.glow:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
@@ -989,6 +990,10 @@ export default function App() {
                         );
                       })}
                     </div>
+                  </div>
+                  <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",borderLeft:"1px solid "+TV.border,paddingLeft:16,minWidth:80,textAlign:"center"}}>
+                    <div style={{fontSize:"clamp(28px,3vw,42px)",fontWeight:900,lineHeight:1,color:isTop3?tc.cup:TV.accent}}>{tvTotalApps}</div>
+                    <div style={{fontSize:"clamp(9px,0.85vw,11px)",letterSpacing:1,fontWeight:700,color:TV.muted,marginTop:3}}>APPS</div>
                   </div>
                   {tvShowTracker && (
                     <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8,alignSelf:"flex-start",borderLeft:"1px solid "+TV.border,paddingLeft:16,minWidth:170}}>
