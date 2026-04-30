@@ -848,7 +848,7 @@ export default function App() {
   var totPts      = ranked.reduce(function(s,a){ return s+a.points; }, 0);
   var totApps     = ranked.reduce(function(s,a){ return s+a.apps; }, 0);
   var totTrans    = ranked.reduce(function(s,a){ return s+a.stats.transfer+(a.stats.qualified_transfer||0); }, 0);
-  var totWeekApps = ranked.reduce(function(s,a){ return s + calcWeeklyReceivedTransfersClosed(actLog,a.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,a.id) + calcWeeklyOwnSales(actLog,a.id); }, 0);
+  var totWeekApps = ranked.reduce(function(s,a){ return s + calcWeeklyReceivedTransfersClosed(actLog,a.id) + calcWeeklyOwnSales(actLog,a.id); }, 0);
   var totWeekHips = ranked.reduce(function(s,a){ return s + calcWeeklyHospital(actLog,a.id); }, 0);
 
   var actTypes = [
@@ -947,7 +947,7 @@ export default function App() {
               var tvTrackerApps = tvShowTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
               var tvUntilMin    = Math.max(0, APP_TARGET_MIN - tvTrackerApps);
               var tvUntilFriday = Math.max(0, APP_TARGET_FRIDAY - tvTrackerApps);
-              var tvTotalApps   = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id);
+              var tvTotalApps   = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id) + calcWeeklySentTransfersClosed(actLog,agent.id);
               return (
                 <div key={agent.id} style={{display:"flex",alignItems:"center",gap:20,borderRadius:14,padding:"12px 24px",background:isTop3?tc.bg:TV.card,border:isTop3?"1px solid "+tc.border:"1px solid "+TV.border,boxShadow:isTop3?"0 0 24px "+tc.glow:"none"}}>
                   <div style={{width:70,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
@@ -1146,7 +1146,7 @@ export default function App() {
               var tc=TROPHY_COLORS[theme][idx];
               var isTop3=idx<3;
               var agentBadgeIds=getAgentBadgeIds(agent); var agentBadges=BADGES.filter(function(b){ return agentBadgeIds.indexOf(b.id)!==-1; });
-              var agentTotalApps = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id);
+              var agentTotalApps = calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id) + calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklySentQualifiedTransfersClosed(actLog,agent.id) + calcWeeklySentTransfersClosed(actLog,agent.id);
               var showTracker = APP_TRACKER_IDS.indexOf(agent.id) !== -1;
               var trackerApps = showTracker ? (calcWeeklyQualifiedTransfers(actLog,agent.id) + calcWeeklyReceivedTransfersClosed(actLog,agent.id) + calcWeeklyOwnSales(actLog,agent.id) + calcWeeklyHospital(actLog,agent.id)) : 0;
               var untilMin    = Math.max(0, APP_TARGET_MIN - trackerApps);
