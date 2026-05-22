@@ -887,6 +887,8 @@ export default function App() {
   var now2 = new Date();
   var startOfMonth = new Date(now2.getFullYear(), now2.getMonth(), 1);
   var startOfYear  = new Date(now2.getFullYear(), 0, 1);
+  var _wd = now2.getDay();
+  var startOfWeek  = new Date(now2); startOfWeek.setDate(now2.getDate()-(_wd===0?6:_wd-1)); startOfWeek.setHours(0,0,0,0);
 
   function buildRankedFromLog(startDate) {
     return [...agents]
@@ -899,6 +901,7 @@ export default function App() {
 
   var monthlyRanked = buildRankedFromLog(startOfMonth);
   var yearlyRanked  = buildRankedFromLog(startOfYear);
+  var weeklyRanked  = buildRankedFromLog(startOfWeek);
 
   var activeRanked = view==="monthly" ? monthlyRanked : view==="yearly" ? yearlyRanked : ranked;
   var viewLabel    = view==="monthly" ? "THIS MONTH" : view==="yearly" ? "THIS YEAR" : "THIS WEEK";
@@ -930,9 +933,9 @@ export default function App() {
 
   var entryAgentsSorted = isManager
     ? (lockedEntryOrder
-        ? lockedEntryOrder.map(function(id){ return ranked.find(function(a){ return a.id===id; }); }).filter(Boolean)
-        : ranked)
-    : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
+        ? lockedEntryOrder.map(function(id){ return weeklyRanked.find(function(a){ return a.id===id; }); }).filter(Boolean)
+        : weeklyRanked)
+    : weeklyRanked.filter(function(a){ return currentUser && a.id===currentUser.id; });
   var entryAgents = entryAgentsSorted;
   var navItems    = ["board","entry","stats","monthly","yearly"].concat(isManager?["feed","manage"]:[]);
   var myData      = ranked.find(function(a){ return a.id===(currentUser&&currentUser.id); });
@@ -1421,13 +1424,13 @@ export default function App() {
                     })}
                   </div>
                   <div style={{display:"flex",gap:8,fontSize:11,color:T.muted,flexWrap:"wrap"}}>
-                    <span>{agent.stats.transfer} xfer</span>
+                    {agent.stats.transfer > 0 && <span>{agent.stats.transfer} xfer</span>}
                     {(agent.stats.qualified_transfer||0) > 0 && <span>{agent.stats.qualified_transfer} qual</span>}
-                    <span>{agent.stats.sold_transfer} sent cls</span>
+                    {agent.stats.sold_transfer > 0 && <span>{agent.stats.sold_transfer} sent cls</span>}
                     {(agent.stats.sold_qualified_transfer||0) > 0 && <span>{agent.stats.sold_qualified_transfer} sent q cls</span>}
-                    <span>{agent.stats.closed_transfer} recv cls</span>
+                    {agent.stats.closed_transfer > 0 && <span>{agent.stats.closed_transfer} recv cls</span>}
                     {(agent.stats.closed_qualified_transfer||0) > 0 && <span>{agent.stats.closed_qualified_transfer} recv q cls</span>}
-                    <span>{agent.stats.own_sale} own</span>
+                    {agent.stats.own_sale > 0 && <span>{agent.stats.own_sale} own</span>}
                     {(agent.stats.hospital_sale||0) > 0 && <span>{agent.stats.hospital_sale} hosp</span>}
                     {(agent.stats.rewrite||0) > 0 && <span>{agent.stats.rewrite} rewrite</span>}
                   </div>
