@@ -325,6 +325,18 @@ function calcWeeklyOwnSales(actLog, agentId) {
   }).length;
 }
 
+function calcWeeklyRewrite(actLog, agentId) {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(new Date(now).setDate(diff));
+  monday.setHours(0,0,0,0);
+  return actLog.filter(function(e) {
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    return e.agentId === agentId && e.type === "rewrite" && t >= monday;
+  }).length;
+}
+
 var DARK  = { bg:"#0a0f1e", text:"#f1f5f9", muted:"#64748b", cardBg:"#0f172a", border:"#1e3a5f", headerBg:"#0a0f1e", bannerBg:"#0f172a" };
 var LIGHT = { bg:"#f1f5f9", text:"#0f172a", muted:"#64748b", cardBg:"#ffffff", border:"#cbd5e1", headerBg:"#ffffff", bannerBg:"#f8fafc" };
 
@@ -1058,7 +1070,7 @@ export default function App() {
                           { label:"Received QT Closed", value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
                           { label:"Own Sales",          value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
                           { label:"HIP Sales",          value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
-                          { label:"ReWrite",            value:agent.stats.rewrite||0,                                      color:"#e11d48" },
+                          { label:"ReWrite",            value:calcWeeklyRewrite(actLog,agent.id),                          color:"#e11d48" },
                         ];
                         return tvStats;
                       })().map(function(stat){
@@ -1272,7 +1284,7 @@ export default function App() {
                         { label:"Received QT Closed",  value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
                         { label:"Own Sales",       value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
                         { label:"HIP Sales",      value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
-                        { label:"ReWrite",        value:agent.stats.rewrite||0,                                      color:"#e11d48" },
+                        { label:"ReWrite",        value:calcWeeklyRewrite(actLog,agent.id),                          color:"#e11d48" },
                       ].map(function(stat){
                         return (
                           <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,border:"1px solid "+stat.color+"66",background:stat.color+"20"}}>
