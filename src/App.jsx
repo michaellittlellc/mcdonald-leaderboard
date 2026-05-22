@@ -193,6 +193,28 @@ function calcPoints(s) { return s.transfer*1 + (s.qualified_transfer||0)*2 + s.s
 function calcApps(s)   { return s.sold_transfer + (s.sold_qualified_transfer||0) + s.closed_transfer + (s.closed_qualified_transfer||0) + s.own_sale + (s.hospital_sale||0); }
 function initStats()   { return { transfer:0, qualified_transfer:0, sold_transfer:0, sold_qualified_transfer:0, closed_transfer:0, closed_qualified_transfer:0, own_sale:0, hospital_sale:0, rewrite:0 }; }
 
+function getCurrentWeekId() {
+  var now = new Date();
+  var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  var est = new Date(utc - (5 * 60 * 60 * 1000)); // EST = UTC-5
+  var day = est.getDay();
+  var monday = new Date(est);
+  monday.setDate(est.getDate() - (day === 0 ? 6 : day - 1));
+  return monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
+}
+
+function calcStatsByDateRange(actLog, agentId, startDate) {
+  var s = initStats();
+  actLog.forEach(function(e) {
+    if (e.agentId !== agentId) return;
+    var t = new Date(e.time && e.time.toDate ? e.time.toDate() : e.time);
+    if (t < startDate) return;
+    if (s.hasOwnProperty(e.type)) s[e.type]++;
+    else s[e.type] = (s[e.type]||0)+1;
+  });
+  return s;
+}
+
 function calcWeeklyApps(actLog, agentId) {
   var now = new Date();
   var day = now.getDay();
@@ -668,6 +690,8 @@ export default function App() {
   var [tvMode,setTvMode]           = useState(false);
   var [manualBadges,setManualBadges] = useState({});
   var [lockedEntryOrder,setLockedEntryOrder] = useState(null);
+  var [weekId, setWeekId] = useState("");
+  var [autoResetDone, setAutoResetDone] = useState(false);
 
   function login(acct)  { setUser(acct); try { localStorage.setItem("mgl-user",JSON.stringify(acct)); } catch(e){} }
   function logout()     { setUser(null); try { localStorage.removeItem("mgl-user"); } catch(e){} setView("board"); }
@@ -724,15 +748,30 @@ export default function App() {
         if(d.prizes)                     setPrizes(d.prizes);
         if(d.weekLabel !== undefined)    setWeekLabel(d.weekLabel);
         if(d.manualBadges)               setManualBadges(d.manualBadges);
+        if(d.weekId)                     setWeekId(d.weekId);
       }
       setLoaded(true);
     });
-    var logQ = query(collection(db,"activityLog"), orderBy("time","desc"), limit(200));
+    var logQ = query(collection(db,"activityLog"), orderBy("time","desc"), limit(2000));
     var unsubLog = onSnapshot(logQ, function(snap){
       setActLog(snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); }));
     });
     return function(){ unsubSettings(); unsubLog(); };
   },[]);
+
+  var autoResetRef = React.useRef(false);
+  useEffect(function(){
+    if(!loaded || autoResetRef.current) return;
+    var currentWeekId = getCurrentWeekId();
+    if(weekId && weekId !== currentWeekId){
+      autoResetRef.current = true;
+      var newStats = {};
+      AGENTS_DEFAULT.forEach(function(a){ newStats[String(a.id)] = initStats(); });
+      saveSettings({ stats: newStats, manualBadges: {}, weekId: currentWeekId });
+    } else if(!weekId && loaded){
+      saveSettings({ weekId: currentWeekId });
+    }
+  }, [loaded, weekId]);
 
   async function saveSettings(patch) {
     try { await setDoc(doc(db,"settings","main"), patch, { merge:true }); }
@@ -845,6 +884,25 @@ export default function App() {
     .map(function(a){ return Object.assign({},a,{points:calcPoints(a.stats),apps:calcApps(a.stats)}); })
     .sort(function(a,b){ return b.points-a.points; });
 
+  var now2 = new Date();
+  var startOfMonth = new Date(now2.getFullYear(), now2.getMonth(), 1);
+  var startOfYear  = new Date(now2.getFullYear(), 0, 1);
+
+  function buildRankedFromLog(startDate) {
+    return [...agents]
+      .map(function(a){
+        var s = calcStatsByDateRange(actLog, a.id, startDate);
+        return Object.assign({}, a, { stats:s, points:calcPoints(s), apps:calcApps(s) });
+      })
+      .sort(function(a,b){ return b.points-a.points; });
+  }
+
+  var monthlyRanked = buildRankedFromLog(startOfMonth);
+  var yearlyRanked  = buildRankedFromLog(startOfYear);
+
+  var activeRanked = view==="monthly" ? monthlyRanked : view==="yearly" ? yearlyRanked : ranked;
+  var viewLabel    = view==="monthly" ? "THIS MONTH" : view==="yearly" ? "THIS YEAR" : "THIS WEEK";
+
   var totPts      = ranked.reduce(function(s,a){ return s+a.points; }, 0);
   var totApps     = ranked.reduce(function(s,a){ return s+a.apps; }, 0);
   var totTrans    = ranked.reduce(function(s,a){ return s+a.stats.transfer+(a.stats.qualified_transfer||0); }, 0);
@@ -876,7 +934,7 @@ export default function App() {
         : ranked)
     : ranked.filter(function(a){ return currentUser && a.id===currentUser.id; });
   var entryAgents = entryAgentsSorted;
-  var navItems    = ["board","entry","stats"].concat(isManager?["feed","manage"]:[]);
+  var navItems    = ["board","entry","stats","monthly","yearly"].concat(isManager?["feed","manage"]:[]);
   var myData      = ranked.find(function(a){ return a.id===(currentUser&&currentUser.id); });
   var myRank      = myData ? ranked.indexOf(myData)+1 : null;
   var weeklyVerse = getWeeklyVerse();
@@ -903,6 +961,7 @@ export default function App() {
             <div>
               <div style={{fontSize:13,letterSpacing:6,color:TV.accent,fontWeight:700}}>McDONALD GROUP</div>
               <div style={{fontSize:32,fontWeight:900,background:tvTheme==="day"?"linear-gradient(135deg,#b45309,#d97706,#0f172a)":"linear-gradient(135deg,#f59e0b,#fbbf24,#fff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:3}}>LEADERBOARD</div>
+              <div style={{fontSize:11,letterSpacing:4,color:TV.muted,fontWeight:700,marginTop:2}}>{viewLabel}</div>
             </div>
             <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               {[{label:"TRANSFERS",value:totTrans},{label:"APPS",value:totWeekApps},{label:"HIPS",value:totWeekHips}].map(function(s){
@@ -917,6 +976,11 @@ export default function App() {
                 style={{padding:"8px 12px",borderRadius:8,border:"1px solid "+TV.border,background:TV.card,color:TV.text,fontSize:12,cursor:"pointer",outline:"none"}}>
                 {Object.entries(TV_THEMES).map(function(entry){ return <option key={entry[0]} value={entry[0]}>{entry[1].label}</option>; })}
               </select>
+              <div style={{display:"flex",gap:4}}>
+                {["board","monthly","yearly"].map(function(v){
+                  return <button key={v} onClick={function(){setView(v);}} style={{padding:"6px 12px",borderRadius:7,border:"1px solid "+(view===v?TV.accent:TV.border),background:view===v?TV.accent+"22":"transparent",color:view===v?TV.accent:TV.muted,cursor:"pointer",fontSize:11,fontWeight:700}}>{v==="board"?"Week":v==="monthly"?"Month":"Year"}</button>;
+                })}
+              </div>
               <button onClick={function(){ setTvMode(false); }} style={{padding:"8px 16px",borderRadius:8,border:"1px solid "+TV.border,background:"transparent",color:TV.muted,cursor:"pointer",fontSize:13,fontWeight:700}}>Exit</button>
             </div>
           </div>
@@ -937,8 +1001,8 @@ export default function App() {
           )}
 
           <div style={{display:"flex",flexDirection:"column",gap:7,flex:1,overflowY:"auto"}}>
-            {ranked.map(function(agent,idx){
-              var maxPts=ranked[0]?ranked[0].points||1:1;
+            {activeRanked.map(function(agent,idx){
+              var maxPts=activeRanked[0]?activeRanked[0].points||1:1;
               var pct=maxPts>0?(agent.points/maxPts)*100:0;
               var isTop3=idx<3;
               var tc=isTop3?TV.top3[idx]:null;
@@ -971,17 +1035,30 @@ export default function App() {
                       <div style={{height:"100%",borderRadius:4,width:pct+"%",transition:"width .6s cubic-bezier(.4,0,.2,1)",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,"+TV.accent+","+TV.muted+")"}}/>
                     </div>
                     <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                      {[
-                        { label:"Transfer",       value:calcWeeklyTransfers(actLog,agent.id),                        color:"#3b82f6" },
-                        { label:"Qualified Transfer",  value:calcWeeklyQualifiedTransfers(actLog,agent.id),               color:"#06b6d4" },
-                        { label:"Sent Closed",    value:calcWeeklySentTransfersClosed(actLog,agent.id),              color:"#8b5cf6" },
-                        { label:"Sent QT Closed",  value:calcWeeklySentQualifiedTransfersClosed(actLog,agent.id),     color:"#a855f7" },
-                        { label:"Received T Closed",    value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),          color:"#f59e0b" },
-                        { label:"Received QT Closed",  value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
-                        { label:"Own Sales",       value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
-                        { label:"HIP Sales",      value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
-                        { label:"ReWrite",        value:agent.stats.rewrite||0,                                      color:"#e11d48" },
-                      ].map(function(stat){
+                      {(function(){
+                        var tvStats=(view==="monthly"||view==="yearly")?[
+                          { label:"Transfer",          value:agent.stats.transfer,                        color:"#3b82f6" },
+                          { label:"Qual Transfer",     value:agent.stats.qualified_transfer||0,           color:"#06b6d4" },
+                          { label:"Sent Closed",       value:agent.stats.sold_transfer,                   color:"#8b5cf6" },
+                          { label:"Sent QT Closed",    value:agent.stats.sold_qualified_transfer||0,      color:"#a855f7" },
+                          { label:"Received T Closed", value:agent.stats.closed_transfer,                 color:"#f59e0b" },
+                          { label:"Received QT Closed",value:agent.stats.closed_qualified_transfer||0,    color:"#f97316" },
+                          { label:"Own Sales",         value:agent.stats.own_sale,                        color:"#34d399" },
+                          { label:"HIP Sales",         value:agent.stats.hospital_sale||0,                color:"#ec4899" },
+                          { label:"ReWrite",           value:agent.stats.rewrite||0,                      color:"#e11d48" },
+                        ]:[
+                          { label:"Transfer",          value:calcWeeklyTransfers(actLog,agent.id),                        color:"#3b82f6" },
+                          { label:"Qualified Transfer", value:calcWeeklyQualifiedTransfers(actLog,agent.id),               color:"#06b6d4" },
+                          { label:"Sent Closed",        value:calcWeeklySentTransfersClosed(actLog,agent.id),              color:"#8b5cf6" },
+                          { label:"Sent QT Closed",     value:calcWeeklySentQualifiedTransfersClosed(actLog,agent.id),     color:"#a855f7" },
+                          { label:"Received T Closed",  value:calcWeeklyReceivedTransfersClosed(actLog,agent.id),          color:"#f59e0b" },
+                          { label:"Received QT Closed", value:calcWeeklyReceivedQualifiedTransfersClosed(actLog,agent.id), color:"#f97316" },
+                          { label:"Own Sales",          value:calcWeeklyOwnSales(actLog,agent.id),                         color:"#34d399" },
+                          { label:"HIP Sales",          value:calcWeeklyHospital(actLog,agent.id),                         color:"#ec4899" },
+                          { label:"ReWrite",            value:agent.stats.rewrite||0,                                      color:"#e11d48" },
+                        ];
+                        return tvStats;
+                      })().map(function(stat){
                         return (
                           <div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:7,padding:"6px 16px",borderRadius:20,border:"1px solid "+stat.color+"77",background:stat.color+"25"}}>
                             <span style={{fontSize:"clamp(18px,2vw,26px)",fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span>
@@ -1052,7 +1129,7 @@ export default function App() {
               return (
                 <button key={v} onClick={function(){ setView(v); if(v==="entry"){ setLockedEntryOrder(ranked.map(function(a){ return a.id; })); } else { setLockedEntryOrder(null); } }}
                   style={{...S.navBtn,border:"1px solid "+(active?"#3b82f6":T.border),color:active?"#f1f5f9":T.muted,background:active?"#1e3a5f":"transparent"}}>
-                  {v==="board"?"Board":v==="entry"?"Log":v==="stats"?"Stats":v==="alltime"?"All Time":v==="feed"?"Feed":"Manage"}
+                  {v==="board"?"Board":v==="entry"?"Log":v==="stats"?"Stats":v==="monthly"?"Monthly":v==="yearly"?"Yearly":v==="feed"?"Feed":"Manage"}
                 </button>
               );
             })}
@@ -1224,6 +1301,92 @@ export default function App() {
                   <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",borderLeft:"1px solid "+T.border,paddingLeft:14,minWidth:70,textAlign:"center"}}>
                     <div style={{fontSize:36,fontWeight:900,lineHeight:1,color:isTop3?tc.cup:"#60a5fa"}}>{agentTotalApps}</div>
                     <div style={{fontSize:10,letterSpacing:1,fontWeight:700,color:T.muted,marginTop:3}}>APPS</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* MONTHLY LEADERBOARD */}
+      {view==="monthly" && (
+        <div style={S.content}>
+          <div style={{fontSize:14,fontWeight:700,color:"#60a5fa",letterSpacing:2,marginBottom:14}}>THIS MONTH</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {monthlyRanked.map(function(agent,idx){
+              var isMe=agent.id===currentUser.id;
+              var maxPts=monthlyRanked[0]?monthlyRanked[0].points||1:1;
+              var pct=maxPts>0?(agent.points/maxPts)*100:0;
+              var tc=TROPHY_COLORS[theme][idx];
+              var isTop3=idx<3;
+              var rowStyle={display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",transition:"all .3s",background:isTop3?tc.bg:T.cardBg,border:isTop3?"1px solid "+tc.border:isMe?"1px solid #2563eb66":"1px solid "+T.border,boxShadow:isTop3?"0 0 18px "+tc.glow:isMe?"0 0 14px #2563eb33":"none"};
+              return (
+                <div key={agent.id} style={rowStyle}>
+                  <div style={{width:52,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    {isTop3?(<div><Trophy rank={idx} size={44}/><div style={{fontSize:9,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</div></div>):(<span style={{fontSize:18,fontWeight:900,color:T.muted}}>{idx+1}</span>)}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:16,fontWeight:800,color:isTop3?tc.shine:T.text,display:"flex",alignItems:"center",gap:6,marginBottom:4}}>{agent.name}{isMe&&<span style={S.meBadge}>YOU</span>}</div>
+                    <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:7}}><div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,#2563eb,#60a5fa)"}}/></div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {[
+                        {label:"Transfer",value:agent.stats.transfer,color:"#3b82f6"},
+                        {label:"Qual Transfer",value:agent.stats.qualified_transfer||0,color:"#06b6d4"},
+                        {label:"Sent Closed",value:agent.stats.sold_transfer,color:"#8b5cf6"},
+                        {label:"Sent QT Closed",value:agent.stats.sold_qualified_transfer||0,color:"#a855f7"},
+                        {label:"Received T Closed",value:agent.stats.closed_transfer,color:"#f59e0b"},
+                        {label:"Received QT Closed",value:agent.stats.closed_qualified_transfer||0,color:"#f97316"},
+                        {label:"Own Sales",value:agent.stats.own_sale,color:"#34d399"},
+                        {label:"HIP Sales",value:agent.stats.hospital_sale||0,color:"#ec4899"},
+                        {label:"ReWrite",value:agent.stats.rewrite||0,color:"#e11d48"},
+                      ].map(function(stat){
+                        return (<div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,border:"1px solid "+stat.color+"66",background:stat.color+"20"}}><span style={{fontSize:18,fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span><span style={{fontSize:12,fontWeight:700,color:T.muted}}>{stat.label}</span></div>);
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* YEARLY LEADERBOARD */}
+      {view==="yearly" && (
+        <div style={S.content}>
+          <div style={{fontSize:14,fontWeight:700,color:"#f59e0b",letterSpacing:2,marginBottom:14}}>THIS YEAR</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {yearlyRanked.map(function(agent,idx){
+              var isMe=agent.id===currentUser.id;
+              var maxPts=yearlyRanked[0]?yearlyRanked[0].points||1:1;
+              var pct=maxPts>0?(agent.points/maxPts)*100:0;
+              var tc=TROPHY_COLORS[theme][idx];
+              var isTop3=idx<3;
+              var rowStyle={display:"flex",alignItems:"center",gap:16,borderRadius:12,padding:"14px 18px",transition:"all .3s",background:isTop3?tc.bg:T.cardBg,border:isTop3?"1px solid "+tc.border:isMe?"1px solid #2563eb66":"1px solid "+T.border,boxShadow:isTop3?"0 0 18px "+tc.glow:isMe?"0 0 14px #2563eb33":"none"};
+              return (
+                <div key={agent.id} style={rowStyle}>
+                  <div style={{width:52,textAlign:"center",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                    {isTop3?(<div><Trophy rank={idx} size={44}/><div style={{fontSize:9,fontWeight:900,letterSpacing:1,color:tc.cup}}>{tc.label}</div></div>):(<span style={{fontSize:18,fontWeight:900,color:T.muted}}>{idx+1}</span>)}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:16,fontWeight:800,color:isTop3?tc.shine:T.text,display:"flex",alignItems:"center",gap:6,marginBottom:4}}>{agent.name}{isMe&&<span style={S.meBadge}>YOU</span>}</div>
+                    <div style={{height:6,background:theme==="dark"?"#1e293b":"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:7}}><div style={{height:"100%",borderRadius:3,width:pct+"%",transition:"width .6s",background:isTop3?"linear-gradient(90deg,"+tc.cup+","+tc.shine+")":"linear-gradient(90deg,#2563eb,#60a5fa)"}}/></div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {[
+                        {label:"Transfer",value:agent.stats.transfer,color:"#3b82f6"},
+                        {label:"Qual Transfer",value:agent.stats.qualified_transfer||0,color:"#06b6d4"},
+                        {label:"Sent Closed",value:agent.stats.sold_transfer,color:"#8b5cf6"},
+                        {label:"Sent QT Closed",value:agent.stats.sold_qualified_transfer||0,color:"#a855f7"},
+                        {label:"Received T Closed",value:agent.stats.closed_transfer,color:"#f59e0b"},
+                        {label:"Received QT Closed",value:agent.stats.closed_qualified_transfer||0,color:"#f97316"},
+                        {label:"Own Sales",value:agent.stats.own_sale,color:"#34d399"},
+                        {label:"HIP Sales",value:agent.stats.hospital_sale||0,color:"#ec4899"},
+                        {label:"ReWrite",value:agent.stats.rewrite||0,color:"#e11d48"},
+                      ].map(function(stat){
+                        return (<div key={stat.label} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,border:"1px solid "+stat.color+"66",background:stat.color+"20"}}><span style={{fontSize:18,fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</span><span style={{fontSize:12,fontWeight:700,color:T.muted}}>{stat.label}</span></div>);
+                      })}
+                    </div>
                   </div>
                 </div>
               );
